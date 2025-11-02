@@ -163,7 +163,7 @@ export const headerActions = (theme: any): ViewStyle => ({
 });
 
 export const completeButton = (theme: any): ViewStyle => ({
-  backgroundColor: theme.colors.processStatus?.approved?.badgeColor,
+  backgroundColor: theme.colors.processStatus?.approved || '#4CAF50',
   borderRadius: moderateScale(8),
   paddingVertical: moderateScale(theme.spacing.md),
   paddingHorizontal: moderateScale(theme.spacing.lg),
