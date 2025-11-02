@@ -14,11 +14,11 @@ from src.core.config import settings
 AVATAR_ROOT_FOLDER = "user_avatars"
 DEFAULT_CONTENT_TYPE = "application/octet-stream"
 
-
-def build_avatar_url(s3_key: str) -> str:
-    return (
-        f"https://{settings.S3_BUCKET}.s3.{settings.AWS_REGION}.amazonaws.com/{s3_key}"
-    )
+def build_avatar_key(user_id: UUID, original_filename: str | None) -> str:
+    suffix = Path(original_filename or "").suffix.lower()
+    sanitized_suffix = suffix if suffix in {".png", ".jpg"} else ""
+    unique_part = uuid4().hex
+    return f"{AVATAR_ROOT_FOLDER}/{user_id}/{unique_part}{sanitized_suffix}"
 
 
 def extract_key_from_avatar_url(avatar_url: str | None) -> str | None:
