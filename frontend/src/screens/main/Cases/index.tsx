@@ -37,7 +37,7 @@ export default function CasesScreen() {
 
   const tabs = useMemo(
     () => [
-      { key: 'PENDING' as TabType, label: 'Pending' },
+      { key: 'PENDING' as TabType, label: t('cases.pending') },
       { key: 'IN_PROGRESS' as TabType, label: t('cases.inProgress') },
       { key: 'COMPLETED' as TabType, label: t('cases.completed') },
       { key: 'CANCELLED' as TabType, label: t('cases.cancelled') },

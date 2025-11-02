@@ -30,10 +30,12 @@ import {
 import Icon from '@react-native-vector-icons/ionicons';
 import { moderateScale } from 'react-native-size-matters';
 import DatePicker from '../../../components/common/datePicker';
+import { useTranslation } from 'react-i18next';
 
 export default function ScheduleManagementScreen() {
   const { themed, theme } = useAppTheme();
   const navigation = useNavigation<NavigationProp<any>>();
+  const { t } = useTranslation();
   const [schedules, setSchedules] = useState<ScheduleSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -126,12 +128,12 @@ export default function ScheduleManagementScreen() {
 
   const handleDeleteSlot = (slot: ScheduleSlot) => {
     Alert.alert(
-      'Delete Schedule Slot',
-      'Are you sure you want to delete this schedule slot?',
+      t('schedule.deleteScheduleSlot'),
+      t('schedule.deleteScheduleSlotConfirm'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('schedule.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('schedule.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -162,7 +164,7 @@ export default function ScheduleManagementScreen() {
 
   const handleSubmit = async () => {
     if (!selectedDate) {
-      Alert.alert('Invalid Input', 'Please select a date');
+      Alert.alert(t('schedule.invalidInput'), t('schedule.pleaseSelectDate'));
       return;
     }
 
@@ -171,8 +173,8 @@ export default function ScheduleManagementScreen() {
 
     if (!startTimeParts || !endTimeParts) {
       Alert.alert(
-        'Invalid Input',
-        'Please enter valid time in format: HH:MM (24-hour format)\nExample: 09:00, 14:30',
+        t('schedule.invalidInput'),
+        t('schedule.invalidTimeFormat'),
       );
       return;
     }
@@ -186,16 +188,16 @@ export default function ScheduleManagementScreen() {
 
     if (endDate <= startDate) {
       Alert.alert(
-        'Invalid Time',
-        'End time must be after start time',
+        t('schedule.invalidTime'),
+        t('schedule.endTimeAfterStart'),
       );
       return;
     }
 
     if (startDate < new Date()) {
       Alert.alert(
-        'Invalid Time',
-        'Start time must be in the future',
+        t('schedule.invalidTime'),
+        t('schedule.startTimeFuture'),
       );
       return;
     }
@@ -257,7 +259,7 @@ export default function ScheduleManagementScreen() {
                 isBooked && themed(styles.statusTextBooked),
               ]}
             >
-              {isBooked ? 'Booked' : isPast ? 'Past' : 'Available'}
+              {isBooked ? t('schedule.booked') : isPast ? t('schedule.past') : t('schedule.available')}
             </Text>
           </View>
         </View>
@@ -269,7 +271,7 @@ export default function ScheduleManagementScreen() {
               size={moderateScale(18)}
               color={theme.colors.onSurfaceVariant}
             />
-            <Text style={themed(styles.timeLabel)}>Start:</Text>
+            <Text style={themed(styles.timeLabel)}>{t('schedule.startLabel')}:</Text>
             <Text style={themed(styles.timeValue)}>
               {formatTime(item.start_time)}
             </Text>
@@ -285,7 +287,7 @@ export default function ScheduleManagementScreen() {
               size={moderateScale(18)}
               color={theme.colors.onSurfaceVariant}
             />
-            <Text style={themed(styles.timeLabel)}>End:</Text>
+            <Text style={themed(styles.timeLabel)}>{t('schedule.endLabel')}:</Text>
             <Text style={themed(styles.timeValue)}>
               {formatTime(item.end_time)}
             </Text>
@@ -299,7 +301,7 @@ export default function ScheduleManagementScreen() {
             color={theme.colors.onSurfaceVariant}
           />
           <Text style={themed(styles.durationText)}>
-            Duration: {durationHours} {durationHours === 1 ? 'hour' : 'hours'}
+            {t('schedule.durationLabel')}: {durationHours} {durationHours === 1 ? t('schedule.hour') : t('schedule.hours')}
           </Text>
         </View>
 
@@ -315,7 +317,7 @@ export default function ScheduleManagementScreen() {
                 color={theme.colors.primary}
               />
               <Text style={themed(styles.actionButtonText)}>
-                Edit
+                {t('schedule.edit')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -333,7 +335,7 @@ export default function ScheduleManagementScreen() {
                   { color: theme.colors.error },
                 ]}
               >
-                Delete
+                {t('schedule.delete')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -350,10 +352,10 @@ export default function ScheduleManagementScreen() {
         color={theme.colors.onSurfaceVariant}
       />
       <Text style={themed(styles.emptyTitle)}>
-        No Schedule Slots
+        {t('schedule.noScheduleSlots')}
       </Text>
       <Text style={themed(styles.emptyMessage)}>
-        Add schedule slots to let clients book appointments with you
+        {t('schedule.addScheduleSlotsMessage')}
       </Text>
       <TouchableOpacity
         style={themed(styles.emptyAddButton)}
@@ -365,7 +367,7 @@ export default function ScheduleManagementScreen() {
           color={theme.colors.onPrimary}
         />
         <Text style={themed(styles.emptyAddButtonText)}>
-          Add Schedule Slot
+          {t('schedule.addScheduleSlot')}
         </Text>
       </TouchableOpacity>
     </View>
@@ -374,7 +376,7 @@ export default function ScheduleManagementScreen() {
   return (
     <SafeAreaView style={themed(styles.container)}>
       <Header
-        title="Manage Schedule"
+        title={t('schedule.manageSchedule')}
         showBackButton={true}
         rightIcon={
           <TouchableOpacity onPress={handleAddSlot}>
@@ -391,7 +393,7 @@ export default function ScheduleManagementScreen() {
           <View style={themed(styles.loadingContainer)}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
             <Text style={themed(styles.loadingText)}>
-              Loading schedules...
+              {t('schedule.loadingSchedules')}
             </Text>
           </View>
         ) : (
@@ -399,10 +401,10 @@ export default function ScheduleManagementScreen() {
             {schedules.length > 0 && (
               <View style={themed(styles.headerInfo)}>
                 <Text style={themed(styles.headerTitle)}>
-                  Your Schedule Slots ({schedules.length})
+                  {t('schedule.yourScheduleSlots')} ({schedules.length})
                 </Text>
                 <Text style={themed(styles.headerSubtitle)}>
-                  Manage your available time slots
+                  {t('schedule.manageAvailableSlots')}
                 </Text>
               </View>
             )}
@@ -431,7 +433,7 @@ export default function ScheduleManagementScreen() {
           <View style={themed(styles.modalContent)}>
             <View style={themed(styles.modalHeader)}>
               <Text style={themed(styles.modalTitle)}>
-                {editingSlot ? 'Edit Schedule Slot' : 'Add Schedule Slot'}
+                {editingSlot ? t('schedule.editScheduleSlot') : t('schedule.addScheduleSlotTitle')}
               </Text>
               <TouchableOpacity onPress={() => setShowModal(false)}>
                 <Icon
@@ -449,17 +451,17 @@ export default function ScheduleManagementScreen() {
             >
               <View style={themed(styles.timePickerContainer)}>
                 <DatePicker
-                  label="Date"
+                  label={t('schedule.date')}
                   value={selectedDate}
                   onChange={setSelectedDate}
                   minimumDate={new Date()}
-                  placeholder="Select date"
+                  placeholder={t('schedule.selectDate')}
                 />
               </View>
 
               <View style={themed(styles.timePickerContainer)}>
                 <Text style={themed(styles.timePickerLabel)}>
-                  Start Time
+                  {t('schedule.startTime')}
                 </Text>
                 <View style={themed(styles.inputWrapper)}>
                   <Icon
@@ -477,13 +479,13 @@ export default function ScheduleManagementScreen() {
                   />
                 </View>
                 <Text style={themed(styles.inputHint)}>
-                  Format: HH:MM (24-hour format, e.g., 09:00, 14:30)
+                  {t('schedule.timeFormatHint')}
                 </Text>
               </View>
 
               <View style={themed(styles.timePickerContainer)}>
                 <Text style={themed(styles.timePickerLabel)}>
-                  End Time
+                  {t('schedule.endTime')}
                 </Text>
                 <View style={themed(styles.inputWrapper)}>
                   <Icon
@@ -501,7 +503,7 @@ export default function ScheduleManagementScreen() {
                   />
                 </View>
                 <Text style={themed(styles.inputHint)}>
-                  Format: HH:MM (24-hour format, e.g., 10:00, 15:30)
+                  {t('schedule.timeFormatHint')}
                 </Text>
               </View>
 
@@ -511,7 +513,7 @@ export default function ScheduleManagementScreen() {
                   onPress={() => setShowModal(false)}
                 >
                   <Text style={themed(styles.cancelButtonText)}>
-                    Cancel
+                    {t('schedule.cancel')}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -529,7 +531,7 @@ export default function ScheduleManagementScreen() {
                     />
                   ) : (
                     <Text style={themed(styles.submitButtonText)}>
-                      {editingSlot ? 'Update' : 'Create'}
+                      {editingSlot ? t('schedule.update') : t('schedule.create')}
                     </Text>
                   )}
                 </TouchableOpacity>

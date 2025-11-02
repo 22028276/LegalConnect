@@ -24,7 +24,7 @@ import { Case, BookingRequest } from '../../../../types/case';
 import Icon from '@react-native-vector-icons/ionicons';
 import { moderateScale } from 'react-native-size-matters';
 import * as styles from './styles';
-import { t } from '../../../../i18n';
+import { useTranslation } from 'react-i18next';
 import { MainStackNames } from '../../../../navigation/routes';
 import { getBookingRequest, decideBookingRequest } from '../../../../services/booking';
 import { getCaseById, updateCaseNotes, addCaseAttachment } from '../../../../services/case';
@@ -43,6 +43,7 @@ export const CaseDetail = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const user = useAppSelector(selectUser);
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const caseData = route.params?.caseData;
   const [bookingRequestData, setBookingRequestData] = useState<BookingRequest | null>(null);
   const [currentCase, setCurrentCase] = useState<Case | null>(null);
@@ -142,17 +143,17 @@ export const CaseDetail = () => {
     if (!isPending || !bookingRequest) return;
 
     Alert.alert(
-      accept ? 'Accept Request' : 'Decline Request',
+      accept ? t('caseDetail.acceptRequest') : t('caseDetail.declineRequest'),
       accept
-        ? 'Are you sure you want to accept this booking request?'
-        : 'Are you sure you want to decline this booking request?',
+        ? t('caseDetail.acceptRequestConfirm')
+        : t('caseDetail.declineRequestConfirm'),
       [
         {
-          text: 'Cancel',
+          text: t('caseDetail.cancel'),
           style: 'cancel',
         },
         {
-          text: accept ? 'Accept' : 'Decline',
+          text: accept ? t('caseDetail.accept') : t('caseDetail.decline'),
           style: accept ? 'default' : 'destructive',
           onPress: async () => {
             setIsProcessing(true);
@@ -198,11 +199,11 @@ export const CaseDetail = () => {
         if (user.id === request.client_id) {
           // Client contacting lawyer
           receiverId = request.lawyer_id;
-          receiverName = 'Lawyer';
+          receiverName = t('caseDetail.lawyer');
         } else if (user.id === request.lawyer_id) {
           // Lawyer contacting client
           receiverId = request.client_id;
-          receiverName = 'Client';
+          receiverName = t('caseDetail.client');
         }
       } else {
         // For active cases
@@ -210,11 +211,11 @@ export const CaseDetail = () => {
         if (user.id === caseItem.client_id) {
           // Client contacting lawyer
           receiverId = caseItem.lawyer_id;
-          receiverName = 'Lawyer';
+          receiverName = t('caseDetail.lawyer');
         } else if (user.id === caseItem.lawyer_id) {
           // Lawyer contacting client
           receiverId = caseItem.client_id;
-          receiverName = 'Client';
+          receiverName = t('caseDetail.client');
         }
       }
 
@@ -315,9 +316,9 @@ export const CaseDetail = () => {
   if (!displayCase) {
     return (
       <SafeAreaView style={themed(styles.container)}>
-        <Header title="Case Detail" showBackButton={true} />
+        <Header title={t('caseDetail.title')} showBackButton={true} />
         <View style={themed(styles.scrollContent)}>
-          <Text style={themed(styles.descriptionText)}>Case not found</Text>
+          <Text style={themed(styles.descriptionText)}>{t('cases.caseNotFound')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -326,7 +327,7 @@ export const CaseDetail = () => {
   if (isLoading) {
     return (
       <SafeAreaView style={themed(styles.container)}>
-        <Header title="Case Detail" showBackButton={true} />
+        <Header title={t('caseDetail.title')} showBackButton={true} />
         <View style={themed(styles.scrollContent)}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
@@ -532,7 +533,7 @@ export const CaseDetail = () => {
                 size={moderateScale(20)}
                 color={theme.colors.primary}
               />
-              <Text style={themed(styles.addNoteButtonText)}>Add Note</Text>
+              <Text style={themed(styles.addNoteButtonText)}>{t('caseDetail.addNote')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -627,7 +628,7 @@ export const CaseDetail = () => {
                       size={moderateScale(20)}
                       color={theme.colors.onPrimary}
                     />
-                    <Text style={themed(styles.primaryButtonText)}>Accept</Text>
+                    <Text style={themed(styles.primaryButtonText)}>{t('caseDetail.accept')}</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -641,7 +642,7 @@ export const CaseDetail = () => {
                   size={moderateScale(20)}
                   color={theme.colors.primary}
                 />
-                <Text style={themed(styles.secondaryButtonText)}>Decline</Text>
+                <Text style={themed(styles.secondaryButtonText)}>{t('caseDetail.decline')}</Text>
               </TouchableOpacity>
             </>
           ) : (
@@ -655,7 +656,7 @@ export const CaseDetail = () => {
                 color={theme.colors.onPrimary}
               />
               <Text style={themed(styles.primaryButtonText)}>
-                {isLawyer ? 'Contact Client' : t('caseDetail.contactLawyer')}
+                {isLawyer ? t('caseDetail.contactClient') : t('caseDetail.contactLawyer')}
               </Text>
             </TouchableOpacity>
           )}
@@ -671,7 +672,7 @@ export const CaseDetail = () => {
           <View style={themed(styles.modalOverlay)}>
             <View style={themed(styles.modalContent)}>
               <View style={themed(styles.modalHeader)}>
-                <Text style={themed(styles.modalTitle)}>Add Note</Text>
+                <Text style={themed(styles.modalTitle)}>{t('caseDetail.addNote')}</Text>
                 <TouchableOpacity onPress={() => setShowNoteModal(false)}>
                   <Icon
                     name="close-outline"
@@ -684,7 +685,7 @@ export const CaseDetail = () => {
                 style={themed(styles.modalTextInput)}
                 multiline
                 numberOfLines={6}
-                placeholder="Enter your note..."
+                placeholder={t('caseDetail.enterNote')}
                 value={noteText}
                 onChangeText={setNoteText}
                 placeholderTextColor={theme.colors.onSurface + '80'}
@@ -698,7 +699,7 @@ export const CaseDetail = () => {
                   }}
                 >
                   <Text style={themed(styles.modalCancelButtonText)}>
-                    Cancel
+                    {t('caseDetail.cancel')}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -712,7 +713,7 @@ export const CaseDetail = () => {
                       color={theme.colors.onPrimary}
                     />
                   ) : (
-                    <Text style={themed(styles.modalSaveButtonText)}>Save</Text>
+                    <Text style={themed(styles.modalSaveButtonText)}>{t('caseDetail.save')}</Text>
                   )}
                 </TouchableOpacity>
               </View>
