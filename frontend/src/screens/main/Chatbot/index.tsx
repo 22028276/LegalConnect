@@ -28,7 +28,13 @@ import Header from '../../../components/layout/header';
 import dayjs from 'dayjs';
 import { t } from '../../../i18n';
 
-function MessageItemComponent({ item }: { item: ChatbotMessage }) {
+function MessageItemComponent({
+  item,
+  onSuggestionPress,
+}: {
+  item: ChatbotMessage;
+  onSuggestionPress?: (suggestion: string) => void;
+}) {
   const { themed, theme } = useAppTheme();
 
   const getConfidenceColor = (confidence: number) => {
@@ -107,7 +113,7 @@ function MessageItemComponent({ item }: { item: ChatbotMessage }) {
                 )}`}
                 style={themed(styles.suggestionChip)}
                 onPress={() => {
-                  // Handle suggestion click - send it as a new message
+                  onSuggestionPress?.(suggestion);
                 }}
               >
                 <Text style={themed(styles.suggestionText)} numberOfLines={2}>
@@ -148,22 +154,31 @@ export default function ChatbotScreen() {
     dispatch(chatbotActions.initializeSession());
   }, [dispatch]);
 
+  const handleSendMessageDirect = async (message: string) => {
+    if (!message.trim() || isLoading) return;
+
+    // Add user message to chat
+    dispatch(chatbotActions.addUserMessage(message.trim()));
+
+    // Send to chatbot
+    await dispatch(
+      sendMessageToChatbot({
+        question: message.trim(),
+        sessionId: sessionId || undefined,
+      }),
+    );
+  };
+
   const handleSendMessage = async () => {
     if (!inputText.trim() || isLoading) return;
 
     const message = inputText.trim();
     setInputText('');
+    await handleSendMessageDirect(message);
+  };
 
-    // Add user message to chat
-    dispatch(chatbotActions.addUserMessage(message));
-
-    // Send to chatbot
-    await dispatch(
-      sendMessageToChatbot({
-        question: message,
-        sessionId: sessionId || undefined,
-      }),
-    );
+  const handleSuggestionPress = (suggestion: string) => {
+    handleSendMessageDirect(suggestion);
   };
 
   const handleClearChat = () => {
@@ -221,8 +236,13 @@ export default function ChatbotScreen() {
       ) : (
         <FlatList
           data={messages}
-          renderItem={({ item }) => <MessageItemComponent item={item} />}
-          keyExtractor={item => item.id}
+          renderItem={({ item }) => (
+            <MessageItemComponent
+              item={item}
+              onSuggestionPress={handleSuggestionPress}
+            />
+          )}
+          keyExtractor={(item, index) => `${item.id}-${index}`}
           contentContainerStyle={themed(styles.messagesList)}
           style={themed(styles.chatContainer)}
           showsVerticalScrollIndicator={false}
