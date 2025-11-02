@@ -14,7 +14,7 @@ class SearchResultType(StrEnum):
 
 class SearchLawyerResult(BaseModel):
     type: Literal[SearchResultType.LAWYER] = Field(
-        default=SearchResultType.LAWYER, const=True
+        default=SearchResultType.LAWYER
     )
     lawyer_id: UUID
     username: str
@@ -25,7 +25,7 @@ class SearchLawyerResult(BaseModel):
 
 class SearchDocumentResult(BaseModel):
     type: Literal[SearchResultType.DOCUMENT] = Field(
-        default=SearchResultType.DOCUMENT, const=True
+        default=SearchResultType.DOCUMENT
     )
     document_id: UUID
     display_name: str
