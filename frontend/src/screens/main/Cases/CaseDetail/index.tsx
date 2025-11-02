@@ -240,35 +240,31 @@ export const CaseDetail = () => {
     if (!displayCase || isDisplayPending) return;
 
     const caseItem = displayCase as Case;
-    Alert.alert(
-      t('caseDetail.cancelCase'),
-      t('caseDetail.cancelCaseConfirm'),
-      [
-        {
-          text: t('caseDetail.cancel'),
-          style: 'cancel',
+    Alert.alert(t('caseDetail.cancelCase'), t('caseDetail.cancelCaseConfirm'), [
+      {
+        text: t('caseDetail.cancel'),
+        style: 'cancel',
+      },
+      {
+        text: t('caseDetail.confirmCancel'),
+        style: 'destructive',
+        onPress: async () => {
+          setIsUpdatingState(true);
+          try {
+            await updateCaseState(caseId, {
+              title: caseItem.title,
+              description: caseItem.description,
+              state: 'CANCELLED',
+            });
+            refetchCase();
+          } catch (error) {
+            console.error('Failed to cancel case:', error);
+          } finally {
+            setIsUpdatingState(false);
+          }
         },
-        {
-          text: t('caseDetail.confirmCancel'),
-          style: 'destructive',
-          onPress: async () => {
-            setIsUpdatingState(true);
-            try {
-              await updateCaseState(caseId, {
-                title: caseItem.title,
-                description: caseItem.description,
-                state: 'CANCELLED',
-              });
-              refetchCase();
-            } catch (error) {
-              console.error('Failed to cancel case:', error);
-            } finally {
-              setIsUpdatingState(false);
-            }
-          },
-        },
-      ],
-    );
+      },
+    ]);
   };
 
   return (
@@ -469,54 +465,6 @@ export const CaseDetail = () => {
         {/* Action Buttons */}
         <View style={themed(styles.buttonContainer)}>
           {/* Complete and Cancel buttons - Only for lawyers on active cases with IN_PROGRESS state */}
-          {isLawyer && 
-           !isDisplayPending && 
-           (displayCase as Case).state === 'IN_PROGRESS' && (
-            <>
-              <TouchableOpacity
-                style={[themed(styles.completeButton), isUpdatingState && themed(styles.buttonDisabled)]}
-                onPress={handleCompleteCase}
-                disabled={isUpdatingState}
-              >
-                {isUpdatingState ? (
-                  <ActivityIndicator size="small" color={theme.colors.onPrimary} />
-                ) : (
-                  <>
-                    <Icon
-                      name="checkmark-circle-outline"
-                      size={moderateScale(20)}
-                      color={theme.colors.onPrimary}
-                    />
-                    <Text style={themed(styles.completeButtonText)}>
-                      {t('caseDetail.complete')}
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[themed(styles.cancelButton), isUpdatingState && themed(styles.buttonDisabled)]}
-                onPress={handleCancelCase}
-                disabled={isUpdatingState}
-              >
-                {isUpdatingState ? (
-                  <ActivityIndicator size="small" color={theme.colors.error} />
-                ) : (
-                  <>
-                    <Icon
-                      name="close-circle-outline"
-                      size={moderateScale(20)}
-                      color={theme.colors.error}
-                    />
-                    <Text style={[themed(styles.cancelButtonText), { color: theme.colors.error }]}>
-                      {t('caseDetail.cancelCase')}
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </>
-          )}
-          
-          {/* Contact button */}
           <Pressable
             style={themed(styles.primaryButton)}
             onPress={handleChatPress}
@@ -527,9 +475,76 @@ export const CaseDetail = () => {
               color={theme.colors.onPrimary}
             />
             <Text style={themed(styles.primaryButtonText)}>
-              {isLawyer ? t('caseDetail.contactClient') : t('caseDetail.contactLawyer')}
+              {isLawyer
+                ? t('caseDetail.contactClient')
+                : t('caseDetail.contactLawyer')}
             </Text>
           </Pressable>
+          {isLawyer &&
+            !isDisplayPending &&
+            (displayCase as Case).state === 'IN_PROGRESS' && (
+              <>
+                {/* Contact button */}
+
+                <TouchableOpacity
+                  style={[
+                    themed(styles.completeButton),
+                    isUpdatingState && themed(styles.buttonDisabled),
+                  ]}
+                  onPress={handleCompleteCase}
+                  disabled={isUpdatingState}
+                >
+                  {isUpdatingState ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={theme.colors.onPrimary}
+                    />
+                  ) : (
+                    <>
+                      <Icon
+                        name="checkmark-circle-outline"
+                        size={moderateScale(20)}
+                        color={theme.colors.onPrimary}
+                      />
+                      <Text style={themed(styles.completeButtonText)}>
+                        {t('caseDetail.complete')}
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    themed(styles.cancelButton),
+                    isUpdatingState && themed(styles.buttonDisabled),
+                  ]}
+                  onPress={handleCancelCase}
+                  disabled={isUpdatingState}
+                >
+                  {isUpdatingState ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={theme.colors.error}
+                    />
+                  ) : (
+                    <>
+                      <Icon
+                        name="close-circle-outline"
+                        size={moderateScale(20)}
+                        color={theme.colors.error}
+                      />
+                      <Text
+                        style={[
+                          themed(styles.cancelButtonText),
+                          { color: theme.colors.error },
+                        ]}
+                      >
+                        {t('caseDetail.cancelCase')}
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </>
+            )}
         </View>
       </ScrollView>
       <AddNoteModal
