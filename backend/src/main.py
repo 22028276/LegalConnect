@@ -3,6 +3,7 @@ import subprocess
 from contextlib import asynccontextmanager
 from pathlib import Path
 from arq.connections import create_pool, RedisSettings
+from redis.asyncio import Redis
 from sqlalchemy.future import select
 from starlette.middleware.cors import CORSMiddleware
 
@@ -56,6 +57,12 @@ async def lifespan(_app: fastapi.FastAPI):
 
     if getattr(settings, "REDIS_URL", None):
         redis_settings = RedisSettings.from_dsn(settings.REDIS_URL)
+        # Tạo Redis client từ REDIS_URL
+        _app.state.redis_client = Redis.from_url(
+            settings.REDIS_URL,
+            decode_responses=True,
+            encoding="utf-8"
+        )
     else:
         redis_settings = RedisSettings(
             host=settings.REDIS_HOST,
@@ -64,6 +71,19 @@ async def lifespan(_app: fastapi.FastAPI):
             password=getattr(settings, "REDIS_PASSWORD", None),
             database=0,
         )
+        # Tạo Redis client từ settings
+        redis_kwargs = {
+            "host": settings.REDIS_HOST,
+            "port": settings.REDIS_PORT,
+            "db": 0,
+            "decode_responses": True,
+            "encoding": "utf-8"
+        }
+        if settings.REDIS_PASSWORD:
+            redis_kwargs["password"] = settings.REDIS_PASSWORD
+            redis_kwargs["username"] = "default"
+        
+        _app.state.redis_client = Redis(**redis_kwargs)
 
     _app.state.arq_pool = await create_pool(redis_settings)
 
@@ -93,6 +113,7 @@ async def lifespan(_app: fastapi.FastAPI):
         yield
     finally:
         await _app.state.arq_pool.close()
+        await _app.state.redis_client.close()
 
 
 app = fastapi.FastAPI(lifespan=lifespan)

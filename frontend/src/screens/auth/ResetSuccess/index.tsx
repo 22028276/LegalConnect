@@ -25,11 +25,17 @@ export default function ResetSuccessScreen() {
       <Header title={t('auth.resetSuccess.title')} />
       <ScrollView contentContainerStyle={themed(styles.scrollContainer)}>
         <View style={themed(styles.formContainer)}>
+          <Text style={themed(styles.description)}>
+            {t('auth.resetSuccess.description')}
+          </Text>
+
           <TouchableOpacity
             style={themed(styles.primaryButton)}
-            onPress={() => navigation.navigate('SetNewPassword')}
+            onPress={() => navigation.navigate('SignIn')}
           >
-            <Text style={themed(styles.primaryButtonText)}>{t('auth.resetSuccess.confirm')}</Text>
+            <Text style={themed(styles.primaryButtonText)}>
+              {t('auth.resetSuccess.backToLogin')}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

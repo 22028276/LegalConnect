@@ -40,11 +40,21 @@ export default function AdminDashboardScreen() {
         </TouchableOpacity>
       </View>
       <ScrollView>
+        {/* Lawyer Verification Requests Card */}
         <View style={themed(styles.simpleCard)}>
-          <Text style={themed(styles.simpleCardTitle)}>{t('admin.approvalRequests')}</Text>
-          <Text style={themed(styles.simpleLargeNumber)}>3</Text>
-          <TouchableOpacity style={themed(styles.simpleButton)}>
-            <Text style={themed(styles.simpleButtonText)}>{t('admin.viewPending')}</Text>
+          <Text style={themed(styles.simpleCardTitle)}>
+            {t('admin.lawyerVerificationRequests')}
+          </Text>
+          <Text style={themed(styles.simpleDescription)}>
+            {t('admin.reviewAndApproveLawyerVerificationRequests')}
+          </Text>
+          <TouchableOpacity
+            style={themed(styles.simpleButton)}
+            onPress={() => navigation.navigate('VerificationRequests')}
+          >
+            <Text style={themed(styles.simpleButtonText)}>
+              {t('admin.viewRequests')}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -57,13 +67,17 @@ export default function AdminDashboardScreen() {
             style={themed(styles.simpleButton)}
             onPress={() => setShowModal(true)}
           >
-            <Text style={themed(styles.simpleButtonText)}>{t('admin.createDocument')}</Text>
+            <Text style={themed(styles.simpleButtonText)}>
+              {t('admin.createDocument')}
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={themed(styles.simpleButton)}
             onPress={() => navigation.navigate('DocumentList')}
           >
-            <Text style={themed(styles.simpleButtonText)}>{t('admin.viewDocuments')}</Text>
+            <Text style={themed(styles.simpleButtonText)}>
+              {t('admin.viewDocuments')}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

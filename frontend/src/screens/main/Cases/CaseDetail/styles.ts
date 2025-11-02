@@ -150,3 +150,14 @@ export const secondaryButtonText = (theme: any): TextStyle => ({
   fontWeight: '600' as const,
   color: theme.colors.primary,
 });
+
+export const loadingContainer = (_theme: any): ViewStyle => ({
+  flex: 1,
+  justifyContent: 'center' as const,
+  alignItems: 'center' as const,
+});
+
+export const headerActions = (theme: any): ViewStyle => ({
+  flexDirection: 'row' as const,
+  gap: moderateScale(theme.spacing.sm),
+});

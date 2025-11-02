@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ActivityIndicator,
-  Alert,
   Image,
   ScrollView,
   Text,
@@ -224,7 +223,7 @@ export default function BookingScreen({
       const message =
         error?.response?.data?.message ||
         error?.message ||
-        'Failed to create booking request';
+        t('toast.bookingFailed');
       showError(t('toast.bookingFailed'), message);
     } finally {
       setLoading(false);

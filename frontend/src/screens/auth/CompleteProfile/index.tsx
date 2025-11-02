@@ -127,7 +127,8 @@ export default function CompleteProfileScreen({}) {
       id: 'avatar_url',
       name: 'avatar_url',
       label: t('auth.completeProfile.avatar'),
-      type: 'image',
+      type: 'file',
+      fileType: 'image',
       placeholder: t('auth.completeProfile.enterAvatar'),
       error: errors?.avatar_url?.message,
     },
@@ -145,7 +146,7 @@ export default function CompleteProfileScreen({}) {
         title={t('auth.completeProfile.title')}
         showBackButton={true}
         navigation={
-          !(user?.phone_number && user?.address)
+          !(user?.phone_number && user?.address) && user.role !== 'admin'
             ? MainStackNames.Setting
             : undefined
         }

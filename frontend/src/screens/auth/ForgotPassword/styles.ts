@@ -20,7 +20,6 @@ export const formContainer: ThemedStyle<ViewStyle> = () => ({});
 export const welcomeTitle: ThemedStyle<TextStyle> = ({
   colors,
   fontSizes,
-  spacing,
 }) => ({
   fontSize: moderateScale(fontSizes.xl),
   fontWeight: '800',

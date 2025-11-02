@@ -1,6 +1,6 @@
-import { ThemedStyle } from '../../../theme';
 import { TextStyle, ViewStyle } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
+import { ThemedStyle } from '../../../theme';
 
 export const container: ThemedStyle<ViewStyle> = ({ colors }) => ({
   flex: 1,
@@ -15,23 +15,27 @@ export const scrollContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   paddingBottom: verticalScale(spacing.xl),
 });
 
-export const formContainer: ThemedStyle<ViewStyle> = () => ({});
+export const formContainer: ThemedStyle<ViewStyle> = () => ({
+  flex: 1,
+  justifyContent: 'center',
+});
 
-export const welcomeTitle: ThemedStyle<TextStyle> = ({
+export const description: ThemedStyle<TextStyle> = ({
   colors,
   fontSizes,
+  spacing,
 }) => ({
-  fontSize: moderateScale(fontSizes.xl),
-  fontWeight: '800',
-  color: colors.onBackground,
-  textAlign: 'left',
+  fontSize: moderateScale(fontSizes.sm),
+  color: colors.onSurfaceVariant,
+  textAlign: 'center',
+  marginTop: verticalScale(spacing.md),
+  lineHeight: moderateScale(20),
 });
 
 export const primaryButton: ThemedStyle<ViewStyle> = ({ colors, spacing }) => ({
-  width: '100%',
-  height: verticalScale(spacing.xxxxl),
   backgroundColor: colors.primary,
-  borderRadius: scale(spacing.sm),
+  paddingVertical: verticalScale(spacing.md),
+  borderRadius: moderateScale(spacing.sm),
   alignItems: 'center',
   justifyContent: 'center',
   marginTop: verticalScale(spacing.lg),
@@ -42,26 +46,12 @@ export const primaryButtonText: ThemedStyle<TextStyle> = ({
   fontSizes,
 }) => ({
   color: colors.onPrimary,
-  fontWeight: '700',
   fontSize: moderateScale(fontSizes.md),
+  fontWeight: '700',
 });
 
 export const loadingContainer: ThemedStyle<ViewStyle> = () => ({
-  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
+  flex: 1,
   justifyContent: 'center',
   alignItems: 'center',
-});
-
-export const backButton: ThemedStyle<ViewStyle> = ({ spacing }) => ({
-  position: 'absolute',
-  top: verticalScale(spacing.sm),
-  left: scale(spacing.sm),
-  paddingVertical: verticalScale(spacing.xxs),
-  paddingHorizontal: scale(spacing.xs),
-  zIndex: 10,
 });

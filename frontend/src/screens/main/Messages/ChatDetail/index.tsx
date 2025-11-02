@@ -28,6 +28,7 @@ import {
   subscribeChatEvents,
 } from '../../../../services/message';
 import { store } from '../../../../redux/store';
+import { useTranslation } from 'react-i18next';
 
 function MessageItemComponent({
   item,
@@ -88,6 +89,7 @@ export default function ChatDetailScreen({ route }: { route: any }) {
   const { theme, themed } = useAppTheme();
   const navigation = useNavigation<NavigationProp<any>>();
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
 
   const { chatId, name } = route.params;
   console.log('chatId: ', chatId);
@@ -98,7 +100,13 @@ export default function ChatDetailScreen({ route }: { route: any }) {
   );
   const userId = useAppSelector((state: any) => state.user.user.id);
 
+  const [inputText, setInputText] = useState('');
+  const flatListRef = React.useRef<FlatList>(null);
+
   useEffect(() => {
+    // Clear previous messages when entering new conversation
+    dispatch(messageActions.clearMessages());
+
     // Ensure WS connection
     const token =
       store.getState()?.user?.token?.replace(/^Bearer\s+/i, '') || '';
@@ -118,10 +126,19 @@ export default function ChatDetailScreen({ route }: { route: any }) {
     dispatch(fetchMessagesByConversationId({ conversationId: chatId }));
     return () => {
       unsubscribe();
+      // Clear messages when leaving conversation
+      dispatch(messageActions.clearMessages());
     };
   }, [dispatch, chatId]);
 
-  const [inputText, setInputText] = useState('');
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (messageList.length > 0) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messageList.length]);
 
   // const renderMessage = ({ item }: { item: Message }) => (
   //   <View
@@ -226,14 +243,18 @@ export default function ChatDetailScreen({ route }: { route: any }) {
         </View>
       ) : (
         <FlatList
+          ref={flatListRef}
           data={messageList}
           renderItem={({ item }) => (
             <MessageItemComponent item={item} userId={userId} />
           )}
-          keyExtractor={item => item.id}
+          keyExtractor={(item, index) => `${item.id}-${index}`}
           contentContainerStyle={themed(styles.messagesList)}
           style={themed(styles.chatContainer)}
           showsVerticalScrollIndicator={false}
+          onContentSizeChange={() =>
+            flatListRef.current?.scrollToEnd({ animated: false })
+          }
         />
       )}
 
@@ -257,7 +278,7 @@ export default function ChatDetailScreen({ route }: { route: any }) {
             <View style={themed(styles.textInputContainer)}>
               <TextInput
                 style={themed(styles.textInput)}
-                placeholder="Type a message..."
+                placeholder={t('messages.typeAMessage')}
                 value={inputText}
                 onChangeText={setInputText}
                 multiline

@@ -82,7 +82,17 @@ export const messageSlice = createSlice({
     addIncomingMessage: (state, action) => {
       // Thêm tin nhắn từ WebSocket
       const newMessage = action.payload;
-      if (newMessage && !state.messages.find(m => m.id === newMessage.id)) {
+      // Check duplicate by ID or by content + timestamp (for optimistic updates)
+      const isDuplicate = state.messages.some(
+        m =>
+          m.id === newMessage.id ||
+          (m.content === newMessage.content &&
+            Math.abs(
+              new Date(m.created_at).getTime() -
+                new Date(newMessage.created_at).getTime(),
+            ) < 5000), // within 5 seconds
+      );
+      if (newMessage && !isDuplicate) {
         state.messages.push(newMessage);
       }
     },
@@ -93,7 +103,7 @@ export const messageSlice = createSlice({
   extraReducers: builder => {
     builder
       .addCase(fetchConversations.pending, state => {
-        state.loadingConversations = true;
+        // state.loadingConversations = true;
         state.error = null;
       })
       .addCase(fetchConversations.fulfilled, (state, action) => {
@@ -145,11 +155,19 @@ export const messageSlice = createSlice({
       .addCase(sendMessageAction.fulfilled, (state, action) => {
         // Thêm tin nhắn mới vào cuối danh sách
         console.log('Message sent successfully:', action.payload);
-        if (
-          action.payload &&
-          !state.messages.find(m => m.id === action.payload.id)
-        ) {
-          state.messages.push(action.payload);
+        const newMessage = action.payload;
+        // Check duplicate by ID or by content + timestamp
+        const isDuplicate = state.messages.some(
+          m =>
+            m.id === newMessage.id ||
+            (m.content === newMessage.content &&
+              Math.abs(
+                new Date(m.created_at).getTime() -
+                  new Date(newMessage.created_at).getTime(),
+              ) < 5000), // within 5 seconds
+        );
+        if (newMessage && !isDuplicate) {
+          state.messages.push(newMessage);
         }
       })
       .addCase(sendMessageAction.rejected, (_state, _action) => {

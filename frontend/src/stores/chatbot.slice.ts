@@ -3,7 +3,8 @@ import { ChatbotState, ChatbotMessage } from '../types/chatbot';
 import { sendChatbotMessage } from '../services/chatbot';
 
 const generateId = () => {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  // return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return '3fa85f64-5717-4562-b3fc-2c963f66afa6';
 };
 
 const initialState: ChatbotState = {

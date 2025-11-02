@@ -100,3 +100,15 @@ export const simpleButtonText: ThemedStyle<TextStyle> = ({
   fontWeight: '500',
   textAlign: 'center',
 });
+
+export const simpleDescription: ThemedStyle<TextStyle> = ({
+  colors,
+  fontSizes,
+  spacing,
+}) => ({
+  fontSize: moderateScale(fontSizes.sm),
+  color: colors.onSurfaceVariant,
+  textAlign: 'center',
+  marginBottom: verticalScale(spacing.xs),
+  paddingHorizontal: moderateScale(spacing.md),
+});

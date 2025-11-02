@@ -94,24 +94,6 @@ export default function CaseCard({
             <Text style={themed(styles.titleText)} numberOfLines={1}>
               {title}
             </Text>
-            <Text
-              style={[
-                themed(styles.lawyerText),
-                themed(stylesOverride?.lawyerText),
-              ]}
-              numberOfLines={1}
-            >
-              {description}
-            </Text>
-            <Text
-              style={[
-                themed(styles.activityText),
-                themed(stylesOverride?.activityText),
-              ]}
-              numberOfLines={1}
-            >
-              Attachments: {attachment_urls?.length || 0}
-            </Text>
           </View>
         </View>
 
@@ -130,6 +112,30 @@ export default function CaseCard({
             {state}
           </Text>
         </View>
+      </View>
+
+      {/* Description and Attachment aligned with icon */}
+      <View style={themed(styles.detailsSection)}>
+        <Text
+          style={[
+            themed(styles.lawyerText),
+            themed(stylesOverride?.lawyerText),
+          ]}
+          numberOfLines={1}
+        >
+          <Text style={themed(styles.labelText)}>Description: </Text>
+          {description}
+        </Text>
+        <Text
+          style={[
+            themed(styles.activityText),
+            themed(stylesOverride?.activityText),
+          ]}
+          numberOfLines={1}
+        >
+          <Text style={themed(styles.labelText)}>Attachment: </Text>
+          {attachment_urls?.length || 0}
+        </Text>
       </View>
       {/* Additional content can be added here if needed */}
 
