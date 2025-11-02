@@ -28,6 +28,7 @@ import {
   subscribeChatEvents,
 } from '../../../../services/message';
 import { store } from '../../../../redux/store';
+import { useTranslation } from 'react-i18next';
 
 function MessageItemComponent({
   item,
@@ -88,6 +89,7 @@ export default function ChatDetailScreen({ route }: { route: any }) {
   const { theme, themed } = useAppTheme();
   const navigation = useNavigation<NavigationProp<any>>();
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
 
   const { chatId, name } = route.params;
   console.log('chatId: ', chatId);
@@ -276,7 +278,7 @@ export default function ChatDetailScreen({ route }: { route: any }) {
             <View style={themed(styles.textInputContainer)}>
               <TextInput
                 style={themed(styles.textInput)}
-                placeholder="Type a message..."
+                placeholder={t('messages.typeAMessage')}
                 value={inputText}
                 onChangeText={setInputText}
                 multiline

@@ -53,7 +53,7 @@ class Settings(BaseSettings):
     MAIL_PASSWORD: str
     MAIL_FROM: str
     MAIL_TLS: bool = True
-    FRONTEND_URL: str
+    FRONTEND_URL: str | None = None  # Optional - nếu không có, sẽ hiển thị token thay vì link
 
     # ─────────────── Redis ───────────────
     REDIS_URL: str | None = None

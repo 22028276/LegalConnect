@@ -1,4 +1,5 @@
 import hashlib
+import secrets
 
 from datetime import timezone, datetime, timedelta
 from passlib.context import CryptContext
@@ -49,6 +50,7 @@ def decode_token(token: str) -> dict:
         raise NotAuthenticated()
     
 def create_reset_token(email: str) -> str:
+    """Tạo JWT token cho password reset (deprecated - dùng create_reset_otp)"""
     expire = datetime.now(timezone.utc) + timedelta(minutes=5)
     to_encode = {
         "sub": email,
@@ -58,6 +60,7 @@ def create_reset_token(email: str) -> str:
     return jwt.encode(to_encode, settings.APP_KEY, algorithm=settings.JWT_ALGORITHM)
 
 def verify_reset_token(token: str) -> str:
+    """Verify JWT token cho password reset (deprecated - dùng verify_reset_otp)"""
     try:
         payload = jwt.decode(token, settings.APP_KEY, algorithms=[settings.JWT_ALGORITHM])
         if payload.get("type") != "reset":
@@ -65,6 +68,10 @@ def verify_reset_token(token: str) -> str:
         return payload.get("sub")
     except JWTError:
         raise NotAuthenticated()
+
+def generate_reset_otp() -> str:
+    """Tạo OTP 6 số cho password reset"""
+    return f"{secrets.randbelow(1000000):06d}"
     
 def _ua_fingerprint(user_agent: str) -> str:
     return hashlib.sha256(user_agent.encode("utf-8")).hexdigest()

@@ -91,7 +91,7 @@ export default function CasesScreen() {
           state: item.status as CaseStatus,
           attachment_urls: [],
           lawyer_note: '',
-          client_note: `Status: ${item.status}`,
+          client_note: `${t('cases.statusPrefix')} ${item.status}`,
           started_at: item.desired_start_time,
           ending_time: item.desired_end_time,
           create_at: item.create_at,

@@ -223,7 +223,7 @@ export default function BookingScreen({
       const message =
         error?.response?.data?.message ||
         error?.message ||
-        'Failed to create booking request';
+        t('toast.bookingFailed');
       showError(t('toast.bookingFailed'), message);
     } finally {
       setLoading(false);

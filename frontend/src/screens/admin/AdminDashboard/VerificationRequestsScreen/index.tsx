@@ -17,12 +17,14 @@ import { getAllVerificationRequests } from '../../../../services/verification';
 import { showError } from '../../../../types/toast';
 import { moderateScale } from 'react-native-size-matters';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import { useTranslation } from 'react-i18next';
 
 type FilterStatus = 'all' | 'pending' | 'approved' | 'rejected';
 
 export default function VerificationRequestsScreen() {
   const { themed, theme } = useAppTheme();
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
   const [requests, setRequests] = useState<VerificationRequest[]>([]);
   const [filteredRequests, setFilteredRequests] = useState<
     VerificationRequest[]
@@ -43,8 +45,8 @@ export default function VerificationRequestsScreen() {
       filterRequestsByStatus(data, filterStatus);
     } catch (error: any) {
       showError(
-        'Error',
-        error?.response?.data?.message || 'Failed to fetch requests',
+        t('admin.error'),
+        error?.response?.data?.message || t('admin.failedToFetchRequests'),
       );
     } finally {
       setIsLoading(false);
@@ -99,11 +101,11 @@ export default function VerificationRequestsScreen() {
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'Pending';
+        return t('admin.pending');
       case 'approved':
-        return 'Approved';
+        return t('admin.approved');
       case 'rejected':
-        return 'Rejected';
+        return t('admin.rejected');
       default:
         return status;
     }
@@ -140,10 +142,10 @@ export default function VerificationRequestsScreen() {
         <View style={themed(styles.cardHeader)}>
           <View style={themed(styles.userInfo)}>
             <Text style={themed(styles.userName)}>
-              User ID: {item.user_id.slice(0, 8)}...
+              {t('admin.userID')}: {item.user_id.slice(0, 8)}...
             </Text>
             <Text style={themed(styles.userEmail)}>
-              Submitted: {formatDate(item.create_at)}
+              {t('admin.submitted')}: {formatDate(item.create_at)}
             </Text>
           </View>
           <View
@@ -170,7 +172,7 @@ export default function VerificationRequestsScreen() {
               size={moderateScale(16)}
               color={theme.colors.onSurfaceVariant}
             />
-            <Text style={themed(styles.infoLabel)}>Position:</Text>
+            <Text style={themed(styles.infoLabel)}>{t('admin.position')}:</Text>
             <Text style={themed(styles.infoValue)}>
               {item.current_job_position}
             </Text>
@@ -182,9 +184,9 @@ export default function VerificationRequestsScreen() {
               size={moderateScale(16)}
               color={theme.colors.onSurfaceVariant}
             />
-            <Text style={themed(styles.infoLabel)}>Experience:</Text>
+            <Text style={themed(styles.infoLabel)}>{t('admin.experience')}:</Text>
             <Text style={themed(styles.infoValue)}>
-              {item.years_of_experience} years
+              {item.years_of_experience} {t('admin.years')}
             </Text>
           </View>
 
@@ -201,7 +203,7 @@ export default function VerificationRequestsScreen() {
                   { color: theme.colors.error },
                 ]}
               >
-                Rejection Reason:
+                {t('admin.rejectionReason')}:
               </Text>
               <Text
                 style={[
@@ -221,7 +223,7 @@ export default function VerificationRequestsScreen() {
                 size={moderateScale(16)}
                 color={theme.colors.onSurfaceVariant}
               />
-              <Text style={themed(styles.infoLabel)}>Reviewed:</Text>
+              <Text style={themed(styles.infoLabel)}>{t('admin.reviewed')}:</Text>
               <Text style={themed(styles.infoValue)}>
                 {formatDate(item.reviewed_at)}
               </Text>
@@ -231,7 +233,9 @@ export default function VerificationRequestsScreen() {
 
         {/* Tap to view details indicator */}
         <View style={themed(styles.cardFooter)}>
-          <Text style={themed(styles.tapToViewText)}>Tap to view details</Text>
+          <Text style={themed(styles.tapToViewText)}>
+            {t('admin.tapToViewDetails')}
+          </Text>
           <Ionicons
             name="chevron-forward-outline"
             size={moderateScale(16)}
@@ -277,8 +281,8 @@ export default function VerificationRequestsScreen() {
       />
       <Text style={themed(styles.emptyText)}>
         {filterStatus === 'all'
-          ? 'No verification requests found'
-          : `No ${filterStatus} requests found`}
+          ? t('admin.noVerificationRequestsFound')
+          : t('admin.noStatusRequestsFound', { status: filterStatus })}
       </Text>
     </View>
   );
@@ -286,7 +290,7 @@ export default function VerificationRequestsScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={themed(styles.container)} edges={['top', 'bottom']}>
-        <Header title="Verification Requests" />
+        <Header title={t('admin.verificationRequests')} />
         <View style={themed(styles.emptyContainer)}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
@@ -296,13 +300,13 @@ export default function VerificationRequestsScreen() {
 
   return (
     <SafeAreaView style={themed(styles.container)} edges={['top', 'bottom']}>
-      <Header title="Verification Requests" />
+      <Header title={t('admin.verificationRequests')} />
 
       <View style={themed(styles.filterContainer)}>
-        {renderFilterButton('all', 'All')}
-        {renderFilterButton('pending', 'Pending')}
-        {renderFilterButton('approved', 'Approved')}
-        {renderFilterButton('rejected', 'Rejected')}
+        {renderFilterButton('all', t('admin.all'))}
+        {renderFilterButton('pending', t('admin.pending'))}
+        {renderFilterButton('approved', t('admin.approved'))}
+        {renderFilterButton('rejected', t('admin.rejected'))}
       </View>
 
       <FlatList

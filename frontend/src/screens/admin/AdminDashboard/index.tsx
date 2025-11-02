@@ -43,16 +43,18 @@ export default function AdminDashboardScreen() {
         {/* Lawyer Verification Requests Card */}
         <View style={themed(styles.simpleCard)}>
           <Text style={themed(styles.simpleCardTitle)}>
-            Lawyer Verification Requests
+            {t('admin.lawyerVerificationRequests')}
           </Text>
           <Text style={themed(styles.simpleDescription)}>
-            Review and approve lawyer verification requests
+            {t('admin.reviewAndApproveLawyerVerificationRequests')}
           </Text>
           <TouchableOpacity
             style={themed(styles.simpleButton)}
             onPress={() => navigation.navigate('VerificationRequests')}
           >
-            <Text style={themed(styles.simpleButtonText)}>View Requests</Text>
+            <Text style={themed(styles.simpleButtonText)}>
+              {t('admin.viewRequests')}
+            </Text>
           </TouchableOpacity>
         </View>
 

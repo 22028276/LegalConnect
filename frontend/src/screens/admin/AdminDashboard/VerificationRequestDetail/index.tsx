@@ -24,11 +24,13 @@ import { showError, showSuccess } from '../../../../types/toast';
 import { moderateScale } from 'react-native-size-matters';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { MainStackNames } from '../../../../navigation/routes';
+import { useTranslation } from 'react-i18next';
 
 export default function VerificationRequestDetail({ route }: { route: any }) {
   const { requestId } = route.params;
   const { themed, theme } = useAppTheme();
   const navigation = useNavigation<any>();
+  const { t } = useTranslation();
   const [request, setRequest] = useState<VerificationRequestWithUser | null>(
     null,
   );
@@ -45,8 +47,8 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
       setRequest(requestData);
     } catch (error: any) {
       showError(
-        'Error',
-        error?.response?.data?.message || 'Failed to fetch request details',
+        t('admin.error'),
+        error?.response?.data?.message || t('admin.failedToFetchRequestDetails'),
       );
       navigation.goBack();
     } finally {
@@ -75,7 +77,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
   };
 
   const formatDate = (dateString: string | null | undefined) => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return t('admin.nA');
     try {
       const date = new Date(dateString);
       return date.toLocaleDateString('en-US', {
@@ -120,24 +122,22 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
 
   const handleApprove = async () => {
     Alert.alert(
-      'Approve Request',
-      `Are you sure you want to approve this verification request for ${
-        request?.id || 'this user'
-      }?`,
+      t('admin.approveRequest'),
+      t('admin.approveRequestConfirm', { userId: request?.id || 'this user' }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('admin.cancel'), style: 'cancel' },
         {
-          text: 'Approve',
+          text: t('admin.approve'),
           style: 'default',
           onPress: async () => {
             try {
               await approveVerificationRequest(requestId);
-              showSuccess('Success', 'Request approved successfully');
+              showSuccess(t('common.success'), t('admin.requestApprovedSuccessfully'));
               navigation.goBack();
             } catch (error: any) {
               showError(
-                'Error',
-                error?.response?.data?.message || 'Failed to approve request',
+                t('admin.error'),
+                error?.response?.data?.message || t('admin.failedToApproveRequest'),
               );
             }
           },
@@ -148,26 +148,26 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
 
   const handleReject = async () => {
     Alert.prompt(
-      'Reject Request',
-      'Please provide a reason for rejection:',
+      t('admin.rejectRequest'),
+      t('admin.rejectRequestPrompt'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('admin.cancel'), style: 'cancel' },
         {
-          text: 'Reject',
+          text: t('admin.reject'),
           style: 'destructive',
           onPress: async (reason?: string) => {
             if (!reason || reason.trim().length === 0) {
-              showError('Error', 'Rejection reason is required');
+              showError(t('admin.error'), t('admin.rejectionReasonRequired'));
               return;
             }
             try {
               await rejectVerificationRequest(requestId, reason.trim());
-              showSuccess('Success', 'Request rejected successfully');
+              showSuccess(t('common.success'), t('admin.requestRejectedSuccessfully'));
               navigation.goBack();
             } catch (error: any) {
               showError(
-                'Error',
-                error?.response?.data?.message || 'Failed to reject request',
+                t('admin.error'),
+                error?.response?.data?.message || t('admin.failedToRejectRequest'),
               );
             }
           },
@@ -180,7 +180,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
   if (isLoading) {
     return (
       <SafeAreaView style={themed(styles.container)} edges={['top', 'bottom']}>
-        <Header title="Request Details" showBackButton />
+        <Header title={t('admin.requestDetails')} showBackButton />
         <View style={themed(styles.loadingContainer)}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
@@ -191,9 +191,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
   if (!request) {
     return (
       <SafeAreaView style={themed(styles.container)} edges={['top', 'bottom']}>
-        <Header title="Request Details" showBackButton />
+        <Header title={t('admin.requestDetails')} showBackButton />
         <View style={themed(styles.loadingContainer)}>
-          <Text style={themed(styles.infoValue)}>Request not found</Text>
+          <Text style={themed(styles.infoValue)}>{t('admin.requestNotFound')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -201,7 +201,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
 
   return (
     <SafeAreaView style={themed(styles.container)} edges={['top', 'bottom']}>
-      <Header title="Verification Request" showBackButton />
+      <Header title={t('admin.verificationRequest')} showBackButton />
 
       <ScrollView contentContainerStyle={themed(styles.scrollContent)}>
         {/* Status Section */}
@@ -217,18 +217,18 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
             </Text>
           </View> */}
           <Text style={themed(styles.statusDate)}>
-            Submitted: {formatDate(request.create_at)}
+            {t('admin.submitted')}: {formatDate(request.create_at)}
           </Text>
           {request.reviewed_at && (
             <Text style={themed(styles.statusDate)}>
-              Reviewed: {formatDate(request.reviewed_at)}
+              {t('admin.reviewed')}: {formatDate(request.reviewed_at)}
             </Text>
           )}
         </View>
 
         {/* User Information Section */}
         <View style={themed(styles.section)}>
-          <Text style={themed(styles.sectionTitle)}>User Information</Text>
+          <Text style={themed(styles.sectionTitle)}>{t('admin.userInformation')}</Text>
 
           <View style={themed(styles.infoRow)}>
             <Ionicons
@@ -236,9 +236,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               size={moderateScale(20)}
               color={theme.colors.onSurfaceVariant}
             />
-            <Text style={themed(styles.infoLabel)}>Full Name:</Text>
+            <Text style={themed(styles.infoLabel)}>{t('admin.fullName')}:</Text>
             <Text style={themed(styles.infoValue)}>
-              {request?.user?.username || 'N/A'}
+              {request?.user?.username || t('admin.nA')}
             </Text>
           </View>
 
@@ -248,9 +248,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               size={moderateScale(20)}
               color={theme.colors.onSurfaceVariant}
             />
-            <Text style={themed(styles.infoLabel)}>Email:</Text>
+            <Text style={themed(styles.infoLabel)}>{t('admin.email')}:</Text>
             <Text style={themed(styles.infoValue)}>
-              {request?.user?.email || 'N/A'}
+              {request?.user?.email || t('admin.nA')}
             </Text>
           </View>
 
@@ -260,9 +260,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               size={moderateScale(20)}
               color={theme.colors.onSurfaceVariant}
             />
-            <Text style={themed(styles.infoLabel)}>Phone:</Text>
+            <Text style={themed(styles.infoLabel)}>{t('admin.phone')}:</Text>
             <Text style={themed(styles.infoValue)}>
-              {request?.user?.phone_number || 'N/A'}
+              {request?.user?.phone_number || t('admin.nA')}
             </Text>
           </View>
 
@@ -272,9 +272,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               size={moderateScale(20)}
               color={theme.colors.onSurfaceVariant}
             />
-            <Text style={themed(styles.infoLabel)}>Address:</Text>
+            <Text style={themed(styles.infoLabel)}>{t('admin.address')}:</Text>
             <Text style={themed(styles.infoValue)}>
-              {request?.user?.address || 'N/A'}
+              {request?.user?.address || t('admin.nA')}
             </Text>
           </View>
 
@@ -310,7 +310,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               size={moderateScale(20)}
               color={theme.colors.onSurfaceVariant}
             />
-            <Text style={themed(styles.infoLabel)}>User ID:</Text>
+            <Text style={themed(styles.infoLabel)}>{t('admin.userID')}:</Text>
             <Text style={themed(styles.infoValue)} numberOfLines={1}>
               {request.user_id}
             </Text>
@@ -332,7 +332,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
         {/* Professional Information Section */}
         <View style={themed(styles.section)}>
           <Text style={themed(styles.sectionTitle)}>
-            Professional Information
+            {t('admin.professionalInformation')}
           </Text>
 
           <View style={themed(styles.infoRow)}>
@@ -341,7 +341,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               size={moderateScale(20)}
               color={theme.colors.onSurfaceVariant}
             />
-            <Text style={themed(styles.infoLabel)}>Current Position:</Text>
+            <Text style={themed(styles.infoLabel)}>{t('admin.currentPosition')}:</Text>
             <Text style={themed(styles.infoValue)}>
               {request.current_job_position}
             </Text>
@@ -353,9 +353,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               size={moderateScale(20)}
               color={theme.colors.onSurfaceVariant}
             />
-            <Text style={themed(styles.infoLabel)}>Years of Experience:</Text>
+            <Text style={themed(styles.infoLabel)}>{t('admin.yearsOfExperience')}:</Text>
             <Text style={themed(styles.infoValue)}>
-              {request.years_of_experience} years
+              {request.years_of_experience} {t('admin.years')}
             </Text>
           </View>
         </View>
@@ -363,21 +363,21 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
         {/* Verification Documents Section */}
         <View style={themed(styles.section)}>
           <Text style={themed(styles.sectionTitle)}>
-            Verification Documents
+            {t('admin.verificationDocuments')}
           </Text>
 
           <View style={themed(styles.imageGrid)}>
             {/* Row 1: Portrait Photo & ID Card Front */}
             <View style={themed(styles.imageRow)}>
               <View style={themed(styles.imageContainer)}>
-                <Text style={themed(styles.imageLabel)}>Portrait Photo</Text>
+                <Text style={themed(styles.imageLabel)}>{t('admin.portraitPhoto')}</Text>
                 <TouchableOpacity
                   style={themed(styles.imageCard)}
                   onPress={() =>
                     request.portrait_url &&
                     setSelectedImage({
                       url: request.portrait_url,
-                      title: 'Portrait Photo',
+                      title: t('admin.portraitPhoto'),
                     })
                   }
                   disabled={!request.portrait_url}
@@ -396,7 +396,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
                         color={theme.colors.onSurfaceVariant}
                       />
                       <Text style={themed(styles.imagePlaceholderText)}>
-                        No image
+                        {t('admin.noImage')}
                       </Text>
                     </View>
                   )}
@@ -404,14 +404,14 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               </View>
 
               <View style={themed(styles.imageContainer)}>
-                <Text style={themed(styles.imageLabel)}>ID Card (Front)</Text>
+                <Text style={themed(styles.imageLabel)}>{t('admin.idCardFront')}</Text>
                 <TouchableOpacity
                   style={themed(styles.imageCard)}
                   onPress={() =>
                     request.identity_card_front_url &&
                     setSelectedImage({
                       url: request.identity_card_front_url,
-                      title: 'ID Card (Front)',
+                      title: t('admin.idCardFront'),
                     })
                   }
                   disabled={!request.identity_card_front_url}
@@ -430,7 +430,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
                         color={theme.colors.onSurfaceVariant}
                       />
                       <Text style={themed(styles.imagePlaceholderText)}>
-                        No image
+                        {t('admin.noImage')}
                       </Text>
                     </View>
                   )}
@@ -441,14 +441,14 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
             {/* Row 2: ID Card Back & Law Certificate */}
             <View style={themed(styles.imageRow)}>
               <View style={themed(styles.imageContainer)}>
-                <Text style={themed(styles.imageLabel)}>ID Card (Back)</Text>
+                <Text style={themed(styles.imageLabel)}>{t('admin.idCardBack')}</Text>
                 <TouchableOpacity
                   style={themed(styles.imageCard)}
                   onPress={() =>
                     request.identity_card_back_url &&
                     setSelectedImage({
                       url: request.identity_card_back_url,
-                      title: 'ID Card (Back)',
+                      title: t('admin.idCardBack'),
                     })
                   }
                   disabled={!request.identity_card_back_url}
@@ -467,7 +467,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
                         color={theme.colors.onSurfaceVariant}
                       />
                       <Text style={themed(styles.imagePlaceholderText)}>
-                        No image
+                        {t('admin.noImage')}
                       </Text>
                     </View>
                   )}
@@ -475,13 +475,13 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               </View>
 
               <View style={themed(styles.imageContainer)}>
-                <Text style={themed(styles.imageLabel)}>Law Certificate</Text>
+                <Text style={themed(styles.imageLabel)}>{t('admin.lawCertificate')}</Text>
                 <TouchableOpacity
                   style={themed(styles.imageCard)}
                   onPress={() =>
                     handleDocumentPress(
                       request.law_certificate_url,
-                      'Law Certificate',
+                      t('admin.lawCertificate'),
                     )
                   }
                   disabled={!request.law_certificate_url}
@@ -495,7 +495,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
                           color={theme.colors.primary}
                         />
                         <Text style={themed(styles.pdfLabel)}>
-                          PDF Document
+                          {t('admin.pdfDocumentLabel')}
                         </Text>
                       </View>
                     ) : (
@@ -513,7 +513,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
                         color={theme.colors.onSurfaceVariant}
                       />
                       <Text style={themed(styles.imagePlaceholderText)}>
-                        No document
+                        {t('admin.noDocument')}
                       </Text>
                     </View>
                   )}
@@ -524,13 +524,13 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
             {/* Row 3: Bachelor Degree */}
             <View style={themed(styles.imageRow)}>
               <View style={themed(styles.imageContainer)}>
-                <Text style={themed(styles.imageLabel)}>Bachelor Degree</Text>
+                <Text style={themed(styles.imageLabel)}>{t('admin.bachelorDegree')}</Text>
                 <TouchableOpacity
                   style={themed(styles.imageCard)}
                   onPress={() =>
                     handleDocumentPress(
                       request.bachelor_degree_url,
-                      'Bachelor Degree',
+                      t('admin.bachelorDegree'),
                     )
                   }
                   disabled={!request.bachelor_degree_url}
@@ -544,7 +544,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
                           color={theme.colors.primary}
                         />
                         <Text style={themed(styles.pdfLabel)}>
-                          PDF Document
+                          {t('admin.pdfDocumentLabel')}
                         </Text>
                       </View>
                     ) : (
@@ -562,7 +562,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
                         color={theme.colors.onSurfaceVariant}
                       />
                       <Text style={themed(styles.imagePlaceholderText)}>
-                        No document
+                        {t('admin.noDocument')}
                       </Text>
                     </View>
                   )}
@@ -577,7 +577,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
         {/* Rejection Reason (if rejected) */}
         {request.status === 'rejected' && request.rejection_reason && (
           <View style={themed(styles.rejectionSection)}>
-            <Text style={themed(styles.rejectionTitle)}>Rejection Reason</Text>
+            <Text style={themed(styles.rejectionTitle)}>{t('admin.rejectionReason')}</Text>
             <Text style={themed(styles.rejectionText)}>
               {request.rejection_reason}
             </Text>
@@ -586,7 +586,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
 
         {/* Request Timeline */}
         <View style={themed(styles.section)}>
-          <Text style={themed(styles.sectionTitle)}>Request Timeline</Text>
+          <Text style={themed(styles.sectionTitle)}>{t('admin.requestTimeline')}</Text>
 
           <View style={themed(styles.infoRow)}>
             <Ionicons
@@ -594,7 +594,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               size={moderateScale(20)}
               color={theme.colors.onSurfaceVariant}
             />
-            <Text style={themed(styles.infoLabel)}>Created:</Text>
+            <Text style={themed(styles.infoLabel)}>{t('admin.created')}:</Text>
             <Text style={themed(styles.infoValue)}>
               {formatDate(request.create_at)}
             </Text>
@@ -606,7 +606,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               size={moderateScale(20)}
               color={theme.colors.onSurfaceVariant}
             />
-            <Text style={themed(styles.infoLabel)}>Last Updated:</Text>
+            <Text style={themed(styles.infoLabel)}>{t('admin.lastUpdated')}:</Text>
             <Text style={themed(styles.infoValue)}>
               {formatDate(request.updated_at)}
             </Text>
@@ -619,7 +619,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
                 size={moderateScale(20)}
                 color={theme.colors.onSurfaceVariant}
               />
-              <Text style={themed(styles.infoLabel)}>Reviewed:</Text>
+              <Text style={themed(styles.infoLabel)}>{t('admin.reviewed')}:</Text>
               <Text style={themed(styles.infoValue)}>
                 {formatDate(request.reviewed_at)}
               </Text>
@@ -633,7 +633,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
                 size={moderateScale(20)}
                 color={theme.colors.onSurfaceVariant}
               />
-              <Text style={themed(styles.infoLabel)}>Reviewed By:</Text>
+              <Text style={themed(styles.infoLabel)}>{t('admin.reviewedBy')}:</Text>
               <Text style={themed(styles.infoValue)} numberOfLines={1}>
                 {request.reviewed_by_admin_id}
               </Text>
@@ -654,7 +654,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               size={moderateScale(24)}
               color={theme.colors.inverseOnSurface}
             />
-            <Text style={themed(styles.buttonText)}>Approve Request</Text>
+            <Text style={themed(styles.buttonText)}>{t('admin.approveRequest')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -666,7 +666,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               size={moderateScale(24)}
               color={theme.colors.inverseOnSurface}
             />
-            <Text style={themed(styles.buttonText)}>Reject Request</Text>
+            <Text style={themed(styles.buttonText)}>{t('admin.rejectRequest')}</Text>
           </TouchableOpacity>
         </View>
       )}

@@ -34,6 +34,7 @@ function ChatConversation({
   onPress: () => void;
 }) {
   const { theme, themed } = useAppTheme();
+  const { t } = useTranslation();
 
   // Get receiver information
   const userId = useAppSelector(state => state.user.user.id);
@@ -63,7 +64,7 @@ function ChatConversation({
         <View style={themed(styles.nameRow)}>
           <Text style={themed(styles.name)} numberOfLines={1}>
             {/* Sau nhớ đổi thành tên người nhận, đừng để username */}
-            {receiver?.username || 'Luật sư giấu tên'}
+            {receiver?.username || t('messages.anonymousLawyer')}
           </Text>
           <Text style={themed(styles.timeText)}>
             {getConversationTimeStatus(conversation.last_message_at)}
@@ -71,7 +72,7 @@ function ChatConversation({
         </View>
         <View style={themed(styles.messageRow)}>
           <Text style={themed(styles.lastMessage)} numberOfLines={1}>
-            {conversation?.last_message?.content || 'Không có tin nhắn nào'}
+            {conversation?.last_message?.content || t('messages.noMessageContent')}
           </Text>
           {/* <Text style={themed(styles.ticks)}>✓✓</Text> */}
         </View>
@@ -156,7 +157,7 @@ export default function MessagesScreen() {
 
     navigation.navigate(MainStackNames.ChatDetail, {
       chatId: conversation.id,
-      name: receiver?.user.username || 'Luật sư giấu tên',
+      name: receiver?.user.username || t('messages.anonymousLawyer'),
       avatar: '', // Thêm avatar nếu có
     });
   };
