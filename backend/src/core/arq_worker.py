@@ -10,8 +10,16 @@ class WorkerSettings:
         send_reset_email,
     }
 
-    redis_settings = RedisSettings(
-        host=settings.REDIS_HOST,
-        port=settings.REDIS_PORT,
-        database=0
-    )
+    @property
+    def redis_settings(self) -> RedisSettings:
+        """Cấu hình Redis - xử lý cả REDIS_URL và REDIS_HOST/PORT"""
+        if settings.REDIS_URL:
+            return RedisSettings.from_dsn(settings.REDIS_URL)
+        else:
+            return RedisSettings(
+                host=settings.REDIS_HOST,
+                port=settings.REDIS_PORT,
+                username="default",
+                password=settings.REDIS_PASSWORD,
+                database=0
+            )
