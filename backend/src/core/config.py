@@ -48,7 +48,7 @@ class Settings(BaseSettings):
 
     # ─────────────── Mail ───────────────
     MAIL_SERVER: str = "smtp.sendgrid.net"
-    MAIL_PORT: int = 2525
+    MAIL_PORT: int = 587  
     MAIL_USERNAME: str
     MAIL_PASSWORD: str
     MAIL_FROM: str
