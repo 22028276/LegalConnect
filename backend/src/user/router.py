@@ -26,7 +26,11 @@ from src.user.exceptions import (
     InvalidAvatarFile,
     AvatarUploadFailed
 )
-from src.user.constants import UserRole
+from src.user.constants import (
+    UserRole,
+    ALLOWED_AVATAR_CONTENT_TYPES,
+    ALLOWED_AVATAR_EXTENSIONS,
+)
 from src.user.utils import (
     build_avatar_key,
     build_avatar_url,
@@ -34,9 +38,6 @@ from src.user.utils import (
     extract_key_from_avatar_url,
     upload_avatar_to_s3,
 )
-
-ALLOWED_AVATAR_CONTENT_TYPES = {"image/png", "image/jpeg"}
-ALLOWED_AVATAR_EXTENSIONS = {".png", ".jpg"}
 
 from src.auth.services import (
     hash_password, 

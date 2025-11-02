@@ -10,6 +10,10 @@ class ChatUserSummary(BaseModel):
     id: uuid.UUID
     username: str
     email: EmailStr
+    avatar_url: str | None = Field(
+        default=None,
+        json_schema_extra={"format": "binary"},
+    )
 
     class Config:
         from_attributes = True

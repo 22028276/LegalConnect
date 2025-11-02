@@ -1,8 +1,9 @@
 from __future__ import annotations
 import asyncio
 
+from pathlib import Path
 from datetime import datetime, timezone
-from typing import Iterable
+from typing import Annotated, Iterable
 from uuid import UUID
 
 from fastapi import (
@@ -61,9 +62,21 @@ from src.lawyer.utils import (
     upload_file_to_s3,
 )
 from src.booking.utils import calculate_lawyer_rating
-from src.user.constants import UserRole
+from src.user.constants import (
+    UserRole,
+    ALLOWED_AVATAR_CONTENT_TYPES,
+    ALLOWED_AVATAR_EXTENSIONS,
+)
 from src.user.models import User
 from src.user.schemas import UserResponse
+from src.user.exceptions import InvalidAvatarFile, AvatarUploadFailed
+from src.user.utils import (
+    build_avatar_key,
+    build_avatar_url,
+    delete_avatar_from_s3,
+    extract_key_from_avatar_url,
+    upload_avatar_to_s3,
+)
 
 
 DOCUMENT_COLUMN_NAMES: tuple[str, ...] = (
@@ -139,6 +152,32 @@ def _ensure_admin(user: User) -> None:
         raise RequestForbidden()
 
 
+async def _store_avatar_and_get_key(current_user: User, avatar: UploadFile) -> str:
+    file_suffix = Path(avatar.filename or "").suffix.lower()
+    content_type = avatar.content_type or ""
+
+    if (
+        content_type not in ALLOWED_AVATAR_CONTENT_TYPES
+        or file_suffix not in ALLOWED_AVATAR_EXTENSIONS
+    ):
+        await avatar.close()
+        raise InvalidAvatarFile()
+
+    file_bytes = await avatar.read()
+    await avatar.close()
+
+    if not file_bytes:
+        raise InvalidAvatarFile()
+
+    s3_key = build_avatar_key(current_user.id, avatar.filename)
+    uploaded_key = await upload_avatar_to_s3(file_bytes, s3_key, content_type)
+
+    if not uploaded_key:
+        raise AvatarUploadFailed()
+
+    return uploaded_key
+
+
 async def _build_profile_response(db: SessionDep,
                                   profile: LawyerProfile, 
                                   user: User
@@ -151,6 +190,7 @@ async def _build_profile_response(db: SessionDep,
         user_id = profile.user_id,
         display_name = user.username,
         email = user.email,
+        avatar_url = user.avatar_url,
         phone_number = user.phone_number or profile.phone_number,
         website_url = profile.website_url,
         office_address = profile.office_address,
@@ -568,10 +608,15 @@ async def get_my_lawyer_profile(db: SessionDep,
 
 @lawyer_route.patch("/profile/me",
                     response_model=LawyerProfileResponse)
-async def update_my_lawyer_profile(payload: LawyerProfileUpdatePayload,
-                                   db: SessionDep,
-                                   current_user: User = Depends(get_current_user)
-                                   ) -> LawyerProfileResponse:
+async def update_my_lawyer_profile(
+    payload: Annotated[
+        LawyerProfileUpdatePayload,
+        Depends(LawyerProfileUpdatePayload.as_form),
+    ],
+    db: SessionDep,
+    avatar: UploadFile | None = File(default=None),
+    current_user: User = Depends(get_current_user)
+) -> LawyerProfileResponse:
     
     if current_user.role != UserRole.LAWYER.value:
         raise LawyerProfileForbidden()
@@ -634,15 +679,16 @@ async def update_my_lawyer_profile(payload: LawyerProfileUpdatePayload,
         else:
             user_updates["address"] = _normalize(value, "Address")
 
-    if "avatar_url" in update_data:
-        value = update_data["avatar_url"]
-        if value is None:
-            user_updates["avatar_url"] = None
-        else:
-            user_updates["avatar_url"] = _normalize(value, "Avatar")
-
     for field, value in user_updates.items():
         setattr(user, field, value)
+
+    if avatar is not None:
+        uploaded_key = await _store_avatar_and_get_key(user, avatar)
+        new_avatar_url = build_avatar_url(uploaded_key)
+        previous_key = extract_key_from_avatar_url(user.avatar_url)
+        if previous_key and previous_key != uploaded_key:
+            await delete_avatar_from_s3(previous_key)
+        user.avatar_url = new_avatar_url
 
     await db.commit()
     await db.refresh(profile)

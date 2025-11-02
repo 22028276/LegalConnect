@@ -1,5 +1,8 @@
 from enum import StrEnum
 
+ALLOWED_AVATAR_CONTENT_TYPES = {"image/png", "image/jpeg"}
+ALLOWED_AVATAR_EXTENSIONS = {".png", ".jpg"}
+
 class UserRole(StrEnum):
     CLIENT = "client"
     LAWYER = "lawyer"
