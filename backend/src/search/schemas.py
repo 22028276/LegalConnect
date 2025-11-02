@@ -13,9 +13,7 @@ class SearchResultType(StrEnum):
 
 
 class SearchLawyerResult(BaseModel):
-    type: Literal[SearchResultType.LAWYER] = Field(
-        default=SearchResultType.LAWYER
-    )
+    type: Literal[SearchResultType.LAWYER] = SearchResultType.LAWYER
     lawyer_id: UUID
     username: str
     email: EmailStr
