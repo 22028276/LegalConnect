@@ -97,13 +97,13 @@ export const messageBubble: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   borderRadius: moderateScale(18),
 });
 
-export const myBubble: ThemedStyle<ViewStyle> = ({}) => ({
-  backgroundColor: '#007AFF',
+export const myBubble: ThemedStyle<ViewStyle> = ({ colors }) => ({
+  backgroundColor: colors.primary,
   borderBottomRightRadius: moderateScale(4),
 });
 
-export const otherBubble: ThemedStyle<ViewStyle> = ({}) => ({
-  backgroundColor: '#E5E5EA',
+export const otherBubble: ThemedStyle<ViewStyle> = ({ colors }) => ({
+  backgroundColor: colors.surfaceVariant,
   borderBottomLeftRadius: moderateScale(4),
 });
 
@@ -112,8 +112,8 @@ export const messageText: ThemedStyle<TextStyle> = ({ fontSizes }) => ({
   lineHeight: moderateScale(20),
 });
 
-export const myMessageText: ThemedStyle<TextStyle> = () => ({
-  color: '#FFFFFF',
+export const myMessageText: ThemedStyle<TextStyle> = ({ colors }) => ({
+  color: colors.onPrimary,
 });
 
 export const otherMessageText: ThemedStyle<TextStyle> = ({ colors }) => ({
@@ -125,8 +125,8 @@ export const messageTime: ThemedStyle<TextStyle> = ({ fontSizes }) => ({
   marginTop: moderateScale(4),
 });
 
-export const myMessageTime: ThemedStyle<TextStyle> = () => ({
-  color: '#FFFFFF',
+export const myMessageTime: ThemedStyle<TextStyle> = ({ colors }) => ({
+  color: colors.onPrimary,
   opacity: 0.8,
 });
 

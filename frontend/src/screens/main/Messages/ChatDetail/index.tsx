@@ -297,7 +297,11 @@ export default function ChatDetailScreen({ route }: { route: any }) {
               style={themed(styles.sendButton)}
               onPress={sendMessage}
             >
-              <Ionicons name="send" size={moderateScale(20)} color="#007AFF" />
+              <Ionicons
+                name="send"
+                size={moderateScale(20)}
+                color={theme.colors.primary}
+              />
             </TouchableOpacity>
           </View>
         </View>
