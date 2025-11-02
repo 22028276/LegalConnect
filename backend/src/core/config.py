@@ -47,12 +47,22 @@ class Settings(BaseSettings):
         )
 
     # ─────────────── Mail ───────────────
-    # Resend API settings (không cần SMTP config nữa)
-    MAIL_PASSWORD: str  # Resend API key (bắt đầu với re_)
-    MAIL_FROM: str  # Email đã verify (ví dụ: onboarding@resend.dev)
+    # Email provider: "resend" hoặc "brevo"
+    EMAIL_PROVIDER: str = "brevo"  # "resend" hoặc "brevo"
+    
+    # API key - tùy theo provider:
+    # - Resend: API key bắt đầu với "re_"
+    # - Brevo: API key từ Brevo dashboard
+    MAIL_PASSWORD: str  # API key của email provider
+    
+    # Email sender address (phải là email đã verify)
+    # - Resend: onboarding@resend.dev (test) hoặc email từ verified domain
+    # - Brevo: email đã verify trong Brevo dashboard
+    MAIL_FROM: str
+    
     FRONTEND_URL: str | None = None  # Optional - nếu không có, sẽ hiển thị OTP thay vì link
     
-    # SMTP settings (deprecated - không dùng nữa vì đã chuyển sang Resend API)
+    # SMTP settings (deprecated - không dùng nữa vì đã chuyển sang API)
     MAIL_SERVER: str | None = None
     MAIL_PORT: int | None = None
     MAIL_USERNAME: str | None = None
