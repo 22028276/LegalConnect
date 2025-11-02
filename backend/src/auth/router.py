@@ -19,6 +19,7 @@ from src.auth.exceptions import (
 
 from src.user.exceptions import UserNotFound
 from src.user.models import User
+from src.user.utils import resolve_avatar_url
 
 auth_route = APIRouter(
     prefix="/auth",
@@ -44,6 +45,8 @@ async def login(db: SessionDep,
     access_token = create_access_token(data={"sub": user.email})
     refresh_token = create_refresh_token(data={"sub": user.email})
 
+    avatar_url = await resolve_avatar_url(user.avatar_url)
+
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
@@ -54,7 +57,7 @@ async def login(db: SessionDep,
         "phone_number": user.phone_number,
         "address": user.address,
         "role": user.role,
-        "avatar_url": user.avatar_url,
+        "avatar_url": avatar_url,
     }
 
 #      END LOGIN ROUTE      #

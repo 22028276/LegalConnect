@@ -31,9 +31,9 @@ from src.user.constants import (
     ALLOWED_AVATAR_CONTENT_TYPES,
     ALLOWED_AVATAR_EXTENSIONS,
 )
+from src.user.serializers import serialize_user
 from src.user.utils import (
     build_avatar_key,
-    build_avatar_url,
     delete_avatar_from_s3,
     extract_key_from_avatar_url,
     upload_avatar_to_s3,
@@ -79,7 +79,7 @@ async def register(user: UserCreate,
     await db.commit()
     await db.refresh(new_user)
 
-    return new_user
+    return await serialize_user(new_user)
 
 #      END REGISTER ROUTE      #
 
@@ -150,16 +150,15 @@ async def update_user(
 
     if avatar is not None:
         uploaded_key = await _store_avatar_and_get_key(curr_user, avatar)
-        new_avatar_url = build_avatar_url(uploaded_key)
         previous_key = extract_key_from_avatar_url(curr_user.avatar_url)
         if previous_key and previous_key != uploaded_key:
             await delete_avatar_from_s3(previous_key)
-        curr_user.avatar_url = new_avatar_url
+        curr_user.avatar_url = uploaded_key
 
     await db.commit()
     await db.refresh(curr_user)
 
-    return curr_user
+    return await serialize_user(curr_user)
 
 
 @user_route.post('/avatar', response_model=UserResponse)
@@ -169,18 +168,16 @@ async def upload_avatar(db: SessionDep,
 
     uploaded_key = await _store_avatar_and_get_key(current_user, avatar)
 
-    new_avatar_url = build_avatar_url(uploaded_key)
-
     previous_key = extract_key_from_avatar_url(current_user.avatar_url)
     if previous_key and previous_key != uploaded_key:
         await delete_avatar_from_s3(previous_key)
 
-    current_user.avatar_url = new_avatar_url
+    current_user.avatar_url = uploaded_key
 
     await db.commit()
     await db.refresh(current_user)
 
-    return current_user
+    return await serialize_user(current_user)
 
 
 @user_route.patch('/{user_id}/role', response_model=UserResponse)
@@ -250,7 +247,7 @@ async def reset_password(db: SessionDep,
     await db.commit()
     await db.refresh(user)
 
-    return user
+    return await serialize_user(user)
 
 #      END FORGET PASSWORD ROUTE      #
 

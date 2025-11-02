@@ -45,7 +45,15 @@ class RequestDetailResponse(RequestSummaryResponse):
 
 
 class RequestRejectPayload(BaseModel):
-    rejection_reason: str = Field(..., max_length=500)
+    rejection_reason: str | None = Field(default=None, max_length=500)
+
+    @field_validator("rejection_reason")
+    @classmethod
+    def _strip_reason(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        stripped = value.strip()
+        return stripped or None
 
 
 class LawyerProfileResponse(BaseModel):
