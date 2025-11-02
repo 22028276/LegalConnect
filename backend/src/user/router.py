@@ -1,10 +1,8 @@
 import uuid
 
 from pathlib import Path
-from fastapi import APIRouter, Depends, Body, File, UploadFile
+from fastapi import APIRouter, Depends, Body, File, UploadFile, Request
 from sqlalchemy.future import select
-from arq import create_pool
-from arq.connections import RedisSettings
 
 from src.core.database import SessionDep
 from src.core.config import settings
@@ -183,7 +181,8 @@ async def update_user_role(user_id: uuid.UUID,
 #      FORGET PASSWORD ROUTE      #
 
 @user_route.post('/forget-password')
-async def forget_password(db: SessionDep,
+async def forget_password(request: Request,
+                          db: SessionDep,
                           payload: ForgetPasswordRequest):
     email_norm = payload.email.strip().lower()
     result = await db.execute(select(User).where(User.email == email_norm))
@@ -191,7 +190,7 @@ async def forget_password(db: SessionDep,
     if not user:
         raise UserNotFound()
     
-    redis = await create_pool(RedisSettings(host= settings.REDIS_HOST, port=settings.REDIS_PORT))
+    redis = request.app.state.arq_pool
     reset_token = create_reset_token(user.email)
     await redis.enqueue_job("send_reset_email", user.email, reset_token)
 
