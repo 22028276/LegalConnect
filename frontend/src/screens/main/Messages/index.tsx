@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
+  RefreshControl,
   Text,
   TouchableOpacity,
   View,
@@ -184,6 +185,12 @@ export default function MessagesScreen() {
           />
         )}
         contentContainerStyle={themed(styles.listContent)}
+        refreshControl={
+          <RefreshControl
+            refreshing={loadingConversations}
+            onRefresh={() => dispatch(fetchConversations())}
+          />
+        }
       />
     </SafeAreaView>
   );
