@@ -149,9 +149,9 @@ async def _build_profile_response(db: SessionDep,
     return LawyerProfileResponse(
         id = profile.id,
         user_id = profile.user_id,
-        display_name = profile.display_name,
+        display_name = user.username,
         email = user.email,
-        phone_number = profile.phone_number,
+        phone_number = user.phone_number or profile.phone_number,
         website_url = profile.website_url,
         office_address = profile.office_address,
         speaking_languages = profile.speaking_languages,
@@ -579,6 +579,9 @@ async def update_my_lawyer_profile(payload: LawyerProfileUpdatePayload,
     profile = await _get_lawyer_profile(db, current_user.id)
     if not profile:
         raise LawyerProfileNotFound()
+    user = await db.get(User, current_user.id)
+    if not user:
+        raise LawyerProfileNotFound()
 
     update_data = payload.model_dump(exclude_unset=True)
 
@@ -600,12 +603,13 @@ async def update_my_lawyer_profile(payload: LawyerProfileUpdatePayload,
         return normalized
 
     str_mappings = {
-        "display_name": "Display name",
         "phone_number": "Phone number",
         "website_url": "Website URL",
         "office_address": "Office address",
         "education": "Education",
     }
+
+    user_updates: dict[str, str | None] = {}
 
     for field, label in str_mappings.items():
         if field not in update_data:
@@ -613,16 +617,35 @@ async def update_my_lawyer_profile(payload: LawyerProfileUpdatePayload,
 
         value = update_data[field]
         if value is None:
-            if field == "display_name":
-                raise LawyerProfileInvalidField("Display name is required.")
             setattr(profile, field, None)
+            if field == "phone_number":
+                user_updates["phone_number"] = None
             continue
 
         normalized = _normalize(value, label)
         setattr(profile, field, normalized)
+        if field == "phone_number":
+            user_updates["phone_number"] = normalized
+
+    if "address" in update_data:
+        value = update_data["address"]
+        if value is None:
+            user_updates["address"] = None
+        else:
+            user_updates["address"] = _normalize(value, "Address")
+
+    if "avatar_url" in update_data:
+        value = update_data["avatar_url"]
+        if value is None:
+            user_updates["avatar_url"] = None
+        else:
+            user_updates["avatar_url"] = _normalize(value, "Avatar")
+
+    for field, value in user_updates.items():
+        setattr(user, field, value)
 
     await db.commit()
     await db.refresh(profile)
 
-    user = await db.get(User, current_user.id) or current_user
+    await db.refresh(user)
     return await _build_profile_response(db, profile, user)
