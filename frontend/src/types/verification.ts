@@ -1,3 +1,5 @@
+import { User } from './user';
+
 export interface VerificationRequest {
   id: string;
   user_id: string;
@@ -17,9 +19,5 @@ export interface VerificationRequest {
 }
 
 export interface VerificationRequestWithUser extends VerificationRequest {
-  id: string;
-  email: string;
-  full_name?: string;
-  phone_number?: string;
-  address?: string;
+  user: User;
 }
