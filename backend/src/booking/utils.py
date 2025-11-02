@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 from uuid import uuid4, UUID
 
 from aiobotocore.session import get_session
 from botocore.exceptions import ClientError
-from sqlalchemy import Select, and_, func, select
+from sqlalchemy import Select, and_, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.booking.constants import BookingRequestStatus
@@ -98,6 +98,7 @@ async def find_available_slot(
     stmt: Select = select(LawyerScheduleSlot).where(
         LawyerScheduleSlot.lawyer_id == lawyer_id,
         LawyerScheduleSlot.is_booked.is_(False),
+        LawyerScheduleSlot.expired.is_(False),
         LawyerScheduleSlot.start_time <= start_time,
         LawyerScheduleSlot.end_time >= end_time,
     )
@@ -116,6 +117,7 @@ async def slot_overlaps(
         LawyerScheduleSlot.lawyer_id == lawyer_id,
         LawyerScheduleSlot.start_time < end_time,
         LawyerScheduleSlot.end_time > start_time,
+        LawyerScheduleSlot.expired.is_(False),
     ]
     if exclude_slot_id:
         conditions.append(LawyerScheduleSlot.id != exclude_slot_id)
@@ -160,3 +162,18 @@ async def build_case_attachment_urls(keys: Iterable[str]) -> list[str]:
         url = await generate_attachment_url(key)
         urls.append(url or "")
     return urls
+
+
+async def mark_expired_slots(db: AsyncSession) -> None:
+    now = datetime.now(timezone.utc)
+    stmt = (
+        update(LawyerScheduleSlot)
+        .where(
+            LawyerScheduleSlot.expired.is_(False),
+            LawyerScheduleSlot.end_time <= now,
+        )
+        .values(expired=True)
+    )
+    result = await db.execute(stmt)
+    if result.rowcount:
+        await db.commit()
