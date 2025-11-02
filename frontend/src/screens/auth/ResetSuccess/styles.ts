@@ -15,7 +15,22 @@ export const scrollContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   paddingBottom: verticalScale(spacing.xl),
 });
 
-export const formContainer: ThemedStyle<ViewStyle> = () => ({});
+export const formContainer: ThemedStyle<ViewStyle> = () => ({
+  justifyContent: 'center',
+  flex: 1,
+});
+
+export const description: ThemedStyle<TextStyle> = ({
+  colors,
+  fontSizes,
+  spacing,
+}) => ({
+  fontSize: moderateScale(fontSizes.sm),
+  color: colors.onSurfaceVariant,
+  textAlign: 'center',
+  marginTop: verticalScale(spacing.md),
+  lineHeight: moderateScale(20),
+});
 
 export const welcomeTitle: ThemedStyle<TextStyle> = ({
   colors,

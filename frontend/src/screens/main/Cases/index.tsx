@@ -1,12 +1,22 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FlatList, Text, TouchableOpacity, View } from 'react-native';
+import {
+  FlatList,
+  RefreshControl,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useAppTheme } from '../../../theme/theme.provider';
 import Header from '../../../components/layout/header';
 import * as styles from './styles';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
+import {
+  NavigationProp,
+  useFocusEffect,
+  useNavigation,
+} from '@react-navigation/native';
 import { MainStackNames } from '../../../navigation/routes';
-import { Case, BookingRequest } from '../../../types/case';
+import { Case, BookingRequest, CaseStatus } from '../../../types/case';
 // import { verticalScale } from 'react-native-size-matters';
 import CaseCard from '../../../components/common/caseCard';
 import { useTranslation } from 'react-i18next';
@@ -32,7 +42,7 @@ export default function CasesScreen() {
 
   const tabs = useMemo(
     () => [
-      { key: 'PENDING' as TabType, label: t('case.pending') },
+      { key: 'PENDING' as TabType, label: t('cases.pending') },
       { key: 'IN_PROGRESS' as TabType, label: t('cases.inProgress') },
       { key: 'COMPLETED' as TabType, label: t('cases.completed') },
       { key: 'CANCELLED' as TabType, label: t('cases.cancelled') },
@@ -40,18 +50,26 @@ export default function CasesScreen() {
     [t],
   );
 
-  // Get data based on active tab
   const displayData = useMemo(() => {
     if (activeTab === 'PENDING') {
-      return pendingCases;
+      return pendingCases.filter(
+        pendingCase => pendingCase.status === 'PENDING',
+      );
     }
     return cases.filter(caseItem => caseItem.state === activeTab);
   }, [activeTab, pendingCases, cases]);
 
-  useEffect(() => {
+  const fetchData = () => {
     dispatch(fetchPendingCase());
     dispatch(fetchUserCases());
-  }, [dispatch]);
+  };
+  // Fetch data every time screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []),
+  );
 
   // Helper function to check if item is BookingRequest
   const isBookingRequest = (item: DisplayItem): item is BookingRequest => {
@@ -59,8 +77,10 @@ export default function CasesScreen() {
   };
 
   const renderCaseCard = ({ item }: { item: DisplayItem }) => {
-    // Convert BookingRequest to Case format for display
-    const caseData: Case = isBookingRequest(item)
+    const isPendingItem = isBookingRequest(item);
+
+    // Convert BookingRequest to Case format for display in card
+    const caseData: Case = isPendingItem
       ? {
           id: item.id,
           booking_request_id: item.id,
@@ -68,7 +88,7 @@ export default function CasesScreen() {
           client_id: item.client_id,
           title: item.title,
           description: item.short_description,
-          state: 'IN_PROGRESS', // Use IN_PROGRESS for pending bookings to show yellow badge
+          state: item.status as CaseStatus,
           attachment_urls: [],
           lawyer_note: '',
           client_note: `Status: ${item.status}`,
@@ -83,7 +103,10 @@ export default function CasesScreen() {
       <CaseCard
         caseData={caseData}
         onPress={() =>
-          navigation.navigate(MainStackNames.CaseDetail, { caseData })
+          navigation.navigate(MainStackNames.CaseDetail, {
+            caseId: item.id,
+            isPending: isPendingItem,
+          })
         }
         stylesOverride={{
           cardContainer: () => ({
@@ -98,7 +121,9 @@ export default function CasesScreen() {
   const renderEmptyState = () => (
     <View style={themed(styles.content)}>
       <Text style={themed(styles.placeholderText)}>
-        {t('cases.noCasesFound', { status: t(`cases.${activeTab}`) })}
+        {t('cases.noCasesFound', {
+          status: t(`cases.${activeTab.toLowerCase()}`),
+        })}
       </Text>
     </View>
   );
@@ -126,6 +151,9 @@ export default function CasesScreen() {
         contentContainerStyle={themed(styles.listContainer)}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={renderEmptyState}
+        refreshControl={
+          <RefreshControl refreshing={false} onRefresh={fetchData} />
+        }
       />
     </SafeAreaView>
   );

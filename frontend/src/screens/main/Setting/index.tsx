@@ -86,6 +86,10 @@ export default function SettingScreen() {
     navigation.navigate(MainStackNames.CompleteProfile);
   };
 
+  const handleBecomeLawyer = () => {
+    navigation.navigate(MainStackNames.LawyerRegistration);
+  };
+
   const settingGroup = useMemo(
     () => [
       {
@@ -118,6 +122,13 @@ export default function SettingScreen() {
   );
 
   const accountGroup = [
+    {
+      Father: TouchableOpacity,
+      iconName: 'person-outline',
+      title: t('setting.becomeLawyer'),
+      onPress: handleBecomeLawyer,
+      hasArrow: true,
+    },
     {
       Father: TouchableOpacity,
       iconName: 'lock-closed-outline',

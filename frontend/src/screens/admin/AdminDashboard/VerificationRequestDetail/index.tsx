@@ -23,6 +23,7 @@ import {
 import { showError, showSuccess } from '../../../../types/toast';
 import { moderateScale } from 'react-native-size-matters';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import { MainStackNames } from '../../../../navigation/routes';
 
 export default function VerificationRequestDetail({ route }: { route: any }) {
   const { requestId } = route.params;
@@ -58,6 +59,21 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestId]);
 
+  // Check if URL is a PDF based on extension
+  const isPdfUrl = (url: string | null | undefined): boolean => {
+    if (!url) return false;
+    const cleanUrl = url.split('?')[0].toLowerCase();
+    return cleanUrl.endsWith('.pdf');
+  };
+
+  // Check if URL is an image based on extension
+  const isImageUrl = (url: string | null | undefined): boolean => {
+    if (!url) return false;
+    const cleanUrl = url.split('?')[0].toLowerCase();
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+    return imageExtensions.some(ext => cleanUrl.endsWith(ext));
+  };
+
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'N/A';
     try {
@@ -71,6 +87,34 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
       });
     } catch {
       return dateString;
+    }
+  };
+
+  // Handle document/image click
+  const handleDocumentPress = (
+    url: string | null | undefined,
+    title: string,
+  ) => {
+    if (!url) return;
+
+    if (isPdfUrl(url)) {
+      // Navigate to PDF viewer
+      navigation.navigate(MainStackNames.PdfViewer, {
+        url: url,
+        title: title,
+      });
+    } else if (isImageUrl(url)) {
+      // Show in modal
+      setSelectedImage({
+        url: url,
+        title: title,
+      });
+    } else {
+      // Default to image modal for unknown types
+      setSelectedImage({
+        url: url,
+        title: title,
+      });
     }
   };
 
@@ -194,7 +238,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
             />
             <Text style={themed(styles.infoLabel)}>Full Name:</Text>
             <Text style={themed(styles.infoValue)}>
-              {request?.full_name || 'N/A'}
+              {request?.user?.username || 'N/A'}
             </Text>
           </View>
 
@@ -206,7 +250,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
             />
             <Text style={themed(styles.infoLabel)}>Email:</Text>
             <Text style={themed(styles.infoValue)}>
-              {request?.email || 'N/A'}
+              {request?.user?.email || 'N/A'}
             </Text>
           </View>
 
@@ -218,7 +262,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
             />
             <Text style={themed(styles.infoLabel)}>Phone:</Text>
             <Text style={themed(styles.infoValue)}>
-              {request?.phone_number || 'N/A'}
+              {request?.user?.phone_number || 'N/A'}
             </Text>
           </View>
 
@@ -230,7 +274,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
             />
             <Text style={themed(styles.infoLabel)}>Address:</Text>
             <Text style={themed(styles.infoValue)}>
-              {request?.address || 'N/A'}
+              {request?.user?.address || 'N/A'}
             </Text>
           </View>
 
@@ -435,20 +479,32 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
                 <TouchableOpacity
                   style={themed(styles.imageCard)}
                   onPress={() =>
-                    request.law_certificate_url &&
-                    setSelectedImage({
-                      url: request.law_certificate_url,
-                      title: 'Law Certificate',
-                    })
+                    handleDocumentPress(
+                      request.law_certificate_url,
+                      'Law Certificate',
+                    )
                   }
                   disabled={!request.law_certificate_url}
                 >
                   {request.law_certificate_url ? (
-                    <Image
-                      source={{ uri: request.law_certificate_url }}
-                      style={themed(styles.image)}
-                      resizeMode="cover"
-                    />
+                    isPdfUrl(request.law_certificate_url) ? (
+                      <View style={themed(styles.pdfPreview)}>
+                        <Ionicons
+                          name="document-text"
+                          size={moderateScale(48)}
+                          color={theme.colors.primary}
+                        />
+                        <Text style={themed(styles.pdfLabel)}>
+                          PDF Document
+                        </Text>
+                      </View>
+                    ) : (
+                      <Image
+                        source={{ uri: request.law_certificate_url }}
+                        style={themed(styles.image)}
+                        resizeMode="cover"
+                      />
+                    )
                   ) : (
                     <View style={themed(styles.imagePlaceholder)}>
                       <Ionicons
@@ -457,7 +513,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
                         color={theme.colors.onSurfaceVariant}
                       />
                       <Text style={themed(styles.imagePlaceholderText)}>
-                        No image
+                        No document
                       </Text>
                     </View>
                   )}
@@ -472,20 +528,32 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
                 <TouchableOpacity
                   style={themed(styles.imageCard)}
                   onPress={() =>
-                    request.bachelor_degree_url &&
-                    setSelectedImage({
-                      url: request.bachelor_degree_url,
-                      title: 'Bachelor Degree',
-                    })
+                    handleDocumentPress(
+                      request.bachelor_degree_url,
+                      'Bachelor Degree',
+                    )
                   }
                   disabled={!request.bachelor_degree_url}
                 >
                   {request.bachelor_degree_url ? (
-                    <Image
-                      source={{ uri: request.bachelor_degree_url }}
-                      style={themed(styles.image)}
-                      resizeMode="cover"
-                    />
+                    isPdfUrl(request.bachelor_degree_url) ? (
+                      <View style={themed(styles.pdfPreview)}>
+                        <Ionicons
+                          name="document-text"
+                          size={moderateScale(48)}
+                          color={theme.colors.primary}
+                        />
+                        <Text style={themed(styles.pdfLabel)}>
+                          PDF Document
+                        </Text>
+                      </View>
+                    ) : (
+                      <Image
+                        source={{ uri: request.bachelor_degree_url }}
+                        style={themed(styles.image)}
+                        resizeMode="cover"
+                      />
+                    )
                   ) : (
                     <View style={themed(styles.imagePlaceholder)}>
                       <Ionicons
@@ -494,7 +562,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
                         color={theme.colors.onSurfaceVariant}
                       />
                       <Text style={themed(styles.imagePlaceholderText)}>
-                        No image
+                        No document
                       </Text>
                     </View>
                   )}
@@ -584,7 +652,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
             <Ionicons
               name="checkmark-outline"
               size={moderateScale(24)}
-              color="#FFFFFF"
+              color={theme.colors.inverseOnSurface}
             />
             <Text style={themed(styles.buttonText)}>Approve Request</Text>
           </TouchableOpacity>
@@ -596,7 +664,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
             <Ionicons
               name="close-outline"
               size={moderateScale(24)}
-              color="#FFFFFF"
+              color={theme.colors.inverseOnSurface}
             />
             <Text style={themed(styles.buttonText)}>Reject Request</Text>
           </TouchableOpacity>

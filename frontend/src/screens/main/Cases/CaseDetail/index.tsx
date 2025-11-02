@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../../../../components/layout/header';
 import {
@@ -7,6 +7,7 @@ import {
   View,
   Pressable,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { useAppTheme } from '../../../../theme/theme.provider';
 import {
@@ -21,9 +22,24 @@ import { moderateScale } from 'react-native-size-matters';
 import * as styles from './styles';
 import { t } from '../../../../i18n';
 import { MainStackNames } from '../../../../navigation/routes';
+import { createNewConversation } from '../../../../stores/message.slice';
+import { useAppDispatch, useAppSelector } from '../../../../redux/hook';
+import {
+  fetchPendingCaseById,
+  fetchUserCaseById,
+  selectCurrentCase,
+  selectIsLoading,
+} from '../../../../stores/case.slice';
+import { AddNoteModal } from '../NoteModal';
+import { AddFileModal } from '../AddFileModal';
 
 type CaseDetailRouteProp = RouteProp<
-  { params: { caseData?: Case | BookingRequest } },
+  {
+    params: {
+      caseId: string;
+      isPending: boolean;
+    };
+  },
   'params'
 >;
 
@@ -31,42 +47,44 @@ export const CaseDetail = () => {
   const { themed, theme } = useAppTheme();
   const route = useRoute<CaseDetailRouteProp>();
   const navigation = useNavigation<NavigationProp<any>>();
-  const caseData = route.params?.caseData;
+  const dispatch = useAppDispatch();
+  const [isAddNoteModalVisible, setIsAddNoteModalVisible] = useState(false);
+  const [isAddFileModalVisible, setIsAddFileModalVisible] = useState(false);
+  const { caseId, isPending } = route.params;
+  const caseData = useAppSelector(selectCurrentCase);
+  const isLoading = useAppSelector(selectIsLoading);
 
-  // Mock data if no case data is passed
-  // const mockCase: Case = {
-  //   id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-  //   booking_request_id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-  //   lawyer_id: '901abd0c-06ff-437d-b621-50bc0b1d81ae',
-  //   client_id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-  //   title: 'Property Dispute Case',
-  //   description:
-  //     'I need to hire a lawyer for my property dispute case. The neighbor has been encroaching on my land and refuses to acknowledge the property boundaries despite clear survey evidence.',
-  //   state: 'IN_PROGRESS',
-  //   attachment_urls: [
-  //     'https://example.com/document1.pdf',
-  //     'https://example.com/document2.pdf',
-  //   ],
-  //   lawyer_note:
-  //     'Initial consultation completed. Gathering evidence for court filing.',
-  //   client_note: 'Please review the survey documents I uploaded.',
-  //   started_at: '2025-01-15T10:00:00Z',
-  //   ending_time: '2025-03-15T10:00:00Z',
-  //   create_at: '2025-01-10T08:30:00Z',
-  //   updated_at: '2025-01-20T14:45:00Z',
-  // };
+  useEffect(() => {
+    // Fetch case data based on type
+    if (isPending) {
+      dispatch(fetchPendingCaseById(caseId));
+    } else {
+      dispatch(fetchUserCaseById(caseId));
+    }
+  }, [dispatch, caseId, isPending]);
+
+  // Show loading state
+  if (isLoading || !caseData) {
+    return (
+      <SafeAreaView style={themed(styles.container)}>
+        <Header title={t('caseDetail.loading')} showBackButton={true} />
+        <View style={themed(styles.loadingContainer)}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const displayCase = caseData;
-  // const displayCase = mockCase;
 
   // Helper function to check if item is BookingRequest (pending case)
   const isBookingRequest = (
-    item: Case | BookingRequest,
+    item: Case | BookingRequest | null,
   ): item is BookingRequest => {
-    return 'short_description' in item && 'status' in item;
+    return item !== null && 'short_description' in item && 'status' in item;
   };
 
-  const isPending = isBookingRequest(displayCase as Case | BookingRequest);
+  const isDisplayPending = isBookingRequest(displayCase);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -85,18 +103,18 @@ export const CaseDetail = () => {
   };
 
   // Get status based on whether it's pending or active case
-  const currentStatus = isPending
-    ? (displayCase as BookingRequest).status
+  const currentStatus = isDisplayPending
+    ? displayCase.status
     : (displayCase as Case).state;
   const statusColors = getStatusColor(currentStatus);
 
   // Get description based on type
-  const description = isPending
-    ? (displayCase as BookingRequest).short_description
+  const description = isDisplayPending
+    ? displayCase.short_description
     : (displayCase as Case).description;
 
   // Get attachment URLs (only for Cases, not BookingRequests)
-  const attachmentUrls = isPending
+  const attachmentUrls = isDisplayPending
     ? []
     : (displayCase as Case).attachment_urls || [];
 
@@ -115,9 +133,88 @@ export const CaseDetail = () => {
     }
   };
 
+  const handleChatPress = async () => {
+    try {
+      const response = await dispatch(
+        createNewConversation({
+          receiverId: (displayCase as Case).lawyer_id || '',
+        }),
+      );
+      console.log('Full response:', JSON.stringify(response, null, 2));
+
+      if (response?.payload) {
+        const payload: any = response.payload;
+        console.log('Payload:', payload);
+
+        const conversationId =
+          payload.id ||
+          payload.conversation_id ||
+          payload.participants?.[0]?.conversation_id;
+
+        console.log('Conversation ID:', conversationId);
+
+        if (!conversationId) {
+          console.error('No conversation ID found in response');
+          return;
+        }
+
+        navigation.navigate(MainStackNames.ChatDetail, {
+          chatId: conversationId,
+          name:
+            payload.participants?.[1]?.user?.username ||
+            t('lawyerProfile.lawyer'),
+          avatar: payload.participants?.[1]?.user?.image_url || '',
+        });
+      }
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+    }
+  };
+
+  const handleAddNotePress = () => {
+    console.log('Add note pressed');
+    setIsAddNoteModalVisible(true);
+  };
+
+  const handleAddFilePress = () => {
+    console.log('Add file pressed');
+    setIsAddFileModalVisible(true);
+  };
+
+  const refetchCase = () => {
+    if (isPending) {
+      dispatch(fetchPendingCaseById(caseId));
+    } else {
+      dispatch(fetchUserCaseById(caseId));
+    }
+  };
+
   return (
     <SafeAreaView style={themed(styles.container)}>
-      <Header title={displayCase.title} showBackButton={true} />
+      <Header
+        title={displayCase.title}
+        showBackButton={true}
+        rightIcon={
+          !isDisplayPending ? (
+            <View style={themed(styles.headerActions)}>
+              <TouchableOpacity onPress={handleAddFilePress}>
+                <Icon
+                  name="attach-outline"
+                  size={moderateScale(24)}
+                  color={theme.colors.onSurface}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleAddNotePress}>
+                <Icon
+                  name="add-outline"
+                  size={moderateScale(24)}
+                  color={theme.colors.onSurface}
+                />
+              </TouchableOpacity>
+            </View>
+          ) : null
+        }
+      />
       <ScrollView
         style={themed(styles.scrollView)}
         contentContainerStyle={themed(styles.scrollContent)}
@@ -145,7 +242,7 @@ export const CaseDetail = () => {
         {/* Description Section */}
         <View style={themed(styles.section)}>
           <Text style={themed(styles.sectionTitle)}>
-            {isPending
+            {isDisplayPending
               ? t('caseDetail.requestDetails')
               : t('caseDetail.description')}
           </Text>
@@ -155,7 +252,7 @@ export const CaseDetail = () => {
         {/* Case Information - Show different info for pending vs active cases */}
         <View style={themed(styles.section)}>
           <Text style={themed(styles.sectionTitle)}>
-            {isPending
+            {isDisplayPending
               ? t('caseDetail.requestInformation')
               : t('caseDetail.caseInformation')}
           </Text>
@@ -167,14 +264,14 @@ export const CaseDetail = () => {
             />
             <View style={themed(styles.infoTextContainer)}>
               <Text style={themed(styles.infoLabel)}>
-                {isPending
+                {isDisplayPending
                   ? t('caseDetail.desiredStartTime')
                   : t('caseDetail.startedAt')}
               </Text>
               <Text style={themed(styles.infoValue)}>
                 {formatDate(
-                  isPending
-                    ? (displayCase as BookingRequest).desired_start_time
+                  isDisplayPending
+                    ? displayCase.desired_start_time
                     : (displayCase as Case).started_at,
                 )}
               </Text>
@@ -188,14 +285,14 @@ export const CaseDetail = () => {
             />
             <View style={themed(styles.infoTextContainer)}>
               <Text style={themed(styles.infoLabel)}>
-                {isPending
+                {isDisplayPending
                   ? t('caseDetail.desiredEndTime')
                   : t('caseDetail.expectedEnd')}
               </Text>
               <Text style={themed(styles.infoValue)}>
                 {formatDate(
-                  isPending
-                    ? (displayCase as BookingRequest).desired_end_time
+                  isDisplayPending
+                    ? displayCase.desired_end_time
                     : (displayCase as Case).ending_time,
                 )}
               </Text>
@@ -219,7 +316,7 @@ export const CaseDetail = () => {
         </View>
 
         {/* Lawyer Note - Only for active cases */}
-        {!isPending && (displayCase as Case).lawyer_note && (
+        {!isDisplayPending && (displayCase as Case).lawyer_note && (
           <View style={themed(styles.section)}>
             <Text style={themed(styles.sectionTitle)}>
               {t('caseDetail.lawyersNote')}
@@ -233,7 +330,7 @@ export const CaseDetail = () => {
         )}
 
         {/* Client Note - Only for active cases */}
-        {!isPending && (displayCase as Case).client_note && (
+        {!isDisplayPending && (displayCase as Case).client_note && (
           <View style={themed(styles.section)}>
             <Text style={themed(styles.sectionTitle)}>
               {t('caseDetail.yourNote')}
@@ -247,7 +344,7 @@ export const CaseDetail = () => {
         )}
 
         {/* Attachments - Only for active cases with attachments */}
-        {!isPending && attachmentUrls.length > 0 && (
+        {!isDisplayPending && attachmentUrls.length > 0 && (
           <View style={themed(styles.section)}>
             <Text style={themed(styles.sectionTitle)}>
               {t('caseDetail.attachments')} ({attachmentUrls.length})
@@ -285,7 +382,10 @@ export const CaseDetail = () => {
 
         {/* Action Buttons */}
         <View style={themed(styles.buttonContainer)}>
-          <Pressable style={themed(styles.primaryButton)}>
+          <Pressable
+            style={themed(styles.primaryButton)}
+            onPress={handleChatPress}
+          >
             <Icon
               name="chatbubble-outline"
               size={moderateScale(20)}
@@ -297,6 +397,18 @@ export const CaseDetail = () => {
           </Pressable>
         </View>
       </ScrollView>
+      <AddNoteModal
+        isAddNoteModalVisible={isAddNoteModalVisible}
+        setIsAddNoteModalVisible={setIsAddNoteModalVisible}
+        caseId={caseId}
+        onSuccess={refetchCase}
+      />
+      <AddFileModal
+        isVisible={isAddFileModalVisible}
+        setIsVisible={setIsAddFileModalVisible}
+        caseId={caseId}
+        onSuccess={refetchCase}
+      />
     </SafeAreaView>
   );
 };

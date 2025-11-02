@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   Text,
   TouchableOpacity,
   View,
@@ -19,6 +20,11 @@ import { getConversationTimeStatus } from '../../../utils/conversationTime.ts';
 import * as styles from './styles';
 import Header from '../../../components/layout/header/index.tsx';
 import { useTranslation } from 'react-i18next';
+import { store } from '../../../redux/store.ts';
+import {
+  connectChatSocket,
+  subscribeChatEvents,
+} from '../../../services/message.ts';
 
 function ChatConversation({
   conversation,
@@ -38,15 +44,20 @@ function ChatConversation({
   return (
     <TouchableOpacity style={themed(styles.card)} onPress={onPress}>
       <View style={themed(styles.avatarWrapper)}>
-        {/* <Image source={{ uri: item.avatar }} style={themed(styles.avatar)} /> */}
-        {/* {item.online ? <View style={themed(styles.onlineDot)} /> : null} */}
-        <View style={themed(styles.avatarPlaceholder)}>
-          <Ionicons
-            name="person"
-            size={scale(20)}
-            color={theme.colors.onSurfaceVariant}
+        {(receiver as any)?.user?.avatar_url ? (
+          <Image
+            source={{ uri: (receiver as any)?.user?.avatar_url }}
+            style={themed(styles.avatar)}
           />
-        </View>
+        ) : (
+          <View style={themed(styles.avatarPlaceholder)}>
+            <Ionicons
+              name="person"
+              size={scale(20)}
+              color={theme.colors.onSurfaceVariant}
+            />
+          </View>
+        )}
       </View>
       <View style={themed(styles.content)}>
         <View style={themed(styles.nameRow)}>
@@ -86,6 +97,22 @@ export default function MessagesScreen() {
 
   useEffect(() => {
     dispatch(fetchConversations());
+  }, [dispatch]);
+
+  useEffect(() => {
+    const token =
+      store.getState()?.user?.token?.replace(/^Bearer\s+/i, '') || '';
+    if (token) {
+      connectChatSocket(token);
+    }
+    const unsubscribe = subscribeChatEvents(evt => {
+      if (evt.type === 'message') {
+        dispatch(fetchConversations());
+      }
+    });
+    return () => {
+      unsubscribe();
+    };
   }, [dispatch]);
 
   // const renderItem = ({ item }: { item: ChatItem }) => (

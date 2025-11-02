@@ -196,19 +196,13 @@ export default function ChatbotScreen() {
 
   return (
     <SafeAreaView style={themed(styles.container)} edges={['top', 'bottom']}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
+      <View style={themed(styles.headerContainer)}>
         <Header title={t('chatbot.title')} showBackButton={true} />
         {messages.length > 0 && (
           <TouchableOpacity
             style={[
               themed(styles.clearButton),
-              { position: 'absolute', right: 16 },
+              themed(styles.clearButtonAbsolute),
             ]}
             onPress={handleClearChat}
           >

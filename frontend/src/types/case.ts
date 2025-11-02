@@ -1,4 +1,4 @@
-export type CaseStatus = 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+export type CaseStatus = 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'PENDING';
 export type BookingRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export interface Case {

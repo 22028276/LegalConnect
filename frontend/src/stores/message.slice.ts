@@ -103,7 +103,7 @@ export const messageSlice = createSlice({
   extraReducers: builder => {
     builder
       .addCase(fetchConversations.pending, state => {
-        state.loadingConversations = true;
+        // state.loadingConversations = true;
         state.error = null;
       })
       .addCase(fetchConversations.fulfilled, (state, action) => {

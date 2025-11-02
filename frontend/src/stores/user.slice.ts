@@ -94,7 +94,19 @@ export const getUserInfo = createAsyncThunk(
   async (_, thunkApi) => {
     try {
       const response = await fetchUserInfo();
-      return response.data;
+      const data = response.data;
+      // API returns: { id, username, email, phone_number, address, role, avatar_url }
+      // Normalize avatar_url to avatar for state
+      const normalizedUser: User = {
+        id: data.id || '',
+        username: data.username || '',
+        email: data.email || '',
+        phone_number: data.phone_number || '',
+        address: data.address || '',
+        role: data.role || '',
+        avatar: data.avatar_url || '',
+      };
+      return normalizedUser;
     } catch (error: any) {
       return thunkApi.rejectWithValue(
         error.message || 'Fetch user info failed',
@@ -108,7 +120,18 @@ export const updateUserProfile = createAsyncThunk(
   async (data: any, thunkApi) => {
     try {
       const response = await updateUserInfo(data);
-      return response.data;
+      // API returns: { id, username, email, phone_number, address, role, avatar_url }
+      // Normalize avatar_url to avatar for state
+      const normalizedUser: User = {
+        id: response.id || '',
+        username: response.username || '',
+        email: response.email || '',
+        phone_number: response.phone_number || '',
+        address: response.address || '',
+        role: response.role || '',
+        avatar: response.avatar_url || '',
+      };
+      return normalizedUser;
     } catch (error: any) {
       return thunkApi.rejectWithValue(
         error.message || 'Update user info failed',
@@ -217,7 +240,6 @@ export const userSlice = createSlice({
       })
       .addCase(getUserInfo.fulfilled, (state, action) => {
         state.isLoading = false;
-        console.log('action.payload: ', action.payload);
         state.user = action.payload;
       })
       .addCase(getUserInfo.rejected, (state, action) => {
@@ -230,7 +252,7 @@ export const userSlice = createSlice({
       })
       .addCase(updateUserProfile.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.user;
+        state.user = action.payload;
       })
       .addCase(updateUserProfile.rejected, (state, action) => {
         state.isLoading = false;
