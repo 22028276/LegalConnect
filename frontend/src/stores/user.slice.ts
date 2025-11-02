@@ -240,7 +240,18 @@ export const userSlice = createSlice({
       })
       .addCase(getUserInfo.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload;
+        console.log('action.payload: ', action.payload);
+        // Map avatar_url from API to avatar in User interface
+        const payload = action.payload;
+        state.user = {
+          id: payload?.id || '',
+          email: payload?.email || '',
+          username: payload?.username || '',
+          phone_number: payload?.phone_number || null,
+          address: payload?.address || null,
+          avatar: payload?.avatar || '',
+          role: payload?.role || '',
+        };
       })
       .addCase(getUserInfo.rejected, (state, action) => {
         state.isLoading = false;
@@ -252,7 +263,19 @@ export const userSlice = createSlice({
       })
       .addCase(updateUserProfile.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload;
+        // Map avatar_url from API to avatar in User interface
+        const payload = action.payload?.user || action.payload;
+        if (payload) {
+          state.user = {
+            id: payload?.id || state.user.id,
+            email: payload?.email || state.user.email,
+            username: payload?.username || state.user.username,
+            phone_number: payload?.phone_number ?? state.user.phone_number,
+            address: payload?.address ?? state.user.address,
+            avatar: payload?.avatar_url || payload?.avatar || state.user.avatar,
+            role: payload?.role || state.user.role,
+          };
+        }
       })
       .addCase(updateUserProfile.rejected, (state, action) => {
         state.isLoading = false;

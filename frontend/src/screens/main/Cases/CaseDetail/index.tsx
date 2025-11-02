@@ -20,7 +20,7 @@ import { Case, BookingRequest } from '../../../../types/case';
 import Icon from '@react-native-vector-icons/ionicons';
 import { moderateScale } from 'react-native-size-matters';
 import * as styles from './styles';
-import { t } from '../../../../i18n';
+import { useTranslation } from 'react-i18next';
 import { MainStackNames } from '../../../../navigation/routes';
 import { createNewConversation } from '../../../../stores/message.slice';
 import { useAppDispatch, useAppSelector } from '../../../../redux/hook';
@@ -32,6 +32,10 @@ import {
 } from '../../../../stores/case.slice';
 import { AddNoteModal } from '../NoteModal';
 import { AddFileModal } from '../AddFileModal';
+import { store } from '../../../../redux/store';
+import { selectRole } from '../../../../stores/user.slice';
+import { updateCaseState } from '../../../../services/case';
+import { Alert } from 'react-native';
 
 type CaseDetailRouteProp = RouteProp<
   {
@@ -50,10 +54,12 @@ export const CaseDetail = () => {
   const dispatch = useAppDispatch();
   const [isAddNoteModalVisible, setIsAddNoteModalVisible] = useState(false);
   const [isAddFileModalVisible, setIsAddFileModalVisible] = useState(false);
+  const [isUpdatingState, setIsUpdatingState] = useState(false);
   const { caseId, isPending } = route.params;
   const caseData = useAppSelector(selectCurrentCase);
   const isLoading = useAppSelector(selectIsLoading);
-
+  const { t } = useTranslation();
+  const isLawyer = selectRole(store.getState()) === 'lawyer';
   useEffect(() => {
     // Fetch case data based on type
     if (isPending) {
@@ -91,9 +97,11 @@ export const CaseDetail = () => {
       case 'PENDING':
       case 'IN_PROGRESS':
         return theme.colors.processStatus.pending;
+      case 'ACCEPTED':
       case 'APPROVED':
       case 'COMPLETED':
         return theme.colors.processStatus.approved;
+      case 'DECLINED':
       case 'REJECTED':
       case 'CANCELLED':
         return theme.colors.processStatus.rejected;
@@ -135,11 +143,10 @@ export const CaseDetail = () => {
 
   const handleChatPress = async () => {
     try {
-      const response = await dispatch(
-        createNewConversation({
-          receiverId: (displayCase as Case).lawyer_id || '',
-        }),
-      );
+      const receiverId = isLawyer
+        ? (displayCase as Case).client_id
+        : (displayCase as Case).lawyer_id;
+      const response = await dispatch(createNewConversation({ receiverId }));
       console.log('Full response:', JSON.stringify(response, null, 2));
 
       if (response?.payload) {
@@ -158,12 +165,18 @@ export const CaseDetail = () => {
           return;
         }
 
+        const name = isLawyer
+          ? payload.participants?.[0]?.user?.username ||
+            t('lawyerProfile.lawyer')
+          : payload.participants?.[1]?.user?.username ||
+            t('clientProfile.client');
+        const avatar = isLawyer
+          ? payload.participants?.[0]?.user?.image_url || ''
+          : payload.participants?.[1]?.user?.image_url || '';
         navigation.navigate(MainStackNames.ChatDetail, {
           chatId: conversationId,
-          name:
-            payload.participants?.[1]?.user?.username ||
-            t('lawyerProfile.lawyer'),
-          avatar: payload.participants?.[1]?.user?.image_url || '',
+          name,
+          avatar,
         });
       }
     } catch (error) {
@@ -187,6 +200,71 @@ export const CaseDetail = () => {
     } else {
       dispatch(fetchUserCaseById(caseId));
     }
+  };
+
+  const handleCompleteCase = async () => {
+    if (!displayCase || isDisplayPending) return;
+
+    const caseItem = displayCase as Case;
+    Alert.alert(
+      t('caseDetail.completeCase'),
+      t('caseDetail.completeCaseConfirm'),
+      [
+        {
+          text: t('caseDetail.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('caseDetail.complete'),
+          onPress: async () => {
+            setIsUpdatingState(true);
+            try {
+              await updateCaseState(caseId, {
+                title: caseItem.title,
+                description: caseItem.description,
+                state: 'COMPLETED',
+              });
+              refetchCase();
+            } catch (error) {
+              console.error('Failed to complete case:', error);
+            } finally {
+              setIsUpdatingState(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleCancelCase = async () => {
+    if (!displayCase || isDisplayPending) return;
+
+    const caseItem = displayCase as Case;
+    Alert.alert(t('caseDetail.cancelCase'), t('caseDetail.cancelCaseConfirm'), [
+      {
+        text: t('caseDetail.cancel'),
+        style: 'cancel',
+      },
+      {
+        text: t('caseDetail.confirmCancel'),
+        style: 'destructive',
+        onPress: async () => {
+          setIsUpdatingState(true);
+          try {
+            await updateCaseState(caseId, {
+              title: caseItem.title,
+              description: caseItem.description,
+              state: 'CANCELLED',
+            });
+            refetchCase();
+          } catch (error) {
+            console.error('Failed to cancel case:', error);
+          } finally {
+            setIsUpdatingState(false);
+          }
+        },
+      },
+    ]);
   };
 
   return (
@@ -315,7 +393,6 @@ export const CaseDetail = () => {
           </View>
         </View>
 
-        {/* Lawyer Note - Only for active cases */}
         {!isDisplayPending && (displayCase as Case).lawyer_note && (
           <View style={themed(styles.section)}>
             <Text style={themed(styles.sectionTitle)}>
@@ -349,39 +426,45 @@ export const CaseDetail = () => {
             <Text style={themed(styles.sectionTitle)}>
               {t('caseDetail.attachments')} ({attachmentUrls.length})
             </Text>
-            {attachmentUrls.map((url, index) => (
-              <TouchableOpacity
-                key={index}
-                style={themed(styles.attachmentItem)}
-                onPress={() => {
-                  navigation.navigate(MainStackNames.PdfViewer, {
-                    url: url,
-                    title: t('caseDetail.attachmentNumber', {
-                      number: index + 1,
-                    }),
-                  });
-                }}
-              >
-                <Icon
-                  name="document-attach-outline"
-                  size={moderateScale(24)}
-                  color={theme.colors.primary}
-                />
-                <Text style={themed(styles.attachmentText)}>
-                  {t('caseDetail.attachmentNumber', { number: index + 1 })}
-                </Text>
-                <Icon
-                  name="chevron-forward-outline"
-                  size={moderateScale(20)}
-                  color={theme.colors.onSurface}
-                />
-              </TouchableOpacity>
-            ))}
+
+            {attachmentUrls.length > 0 && (
+              <>
+                {attachmentUrls.map((url, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={themed(styles.attachmentItem)}
+                    onPress={() => {
+                      navigation.navigate(MainStackNames.PdfViewer, {
+                        url: url,
+                        title: t('caseDetail.attachmentNumber', {
+                          number: index + 1,
+                        }),
+                      });
+                    }}
+                  >
+                    <Icon
+                      name="document-attach-outline"
+                      size={moderateScale(24)}
+                      color={theme.colors.primary}
+                    />
+                    <Text style={themed(styles.attachmentText)}>
+                      {t('caseDetail.attachmentNumber', { number: index + 1 })}
+                    </Text>
+                    <Icon
+                      name="chevron-forward-outline"
+                      size={moderateScale(20)}
+                      color={theme.colors.onSurface}
+                    />
+                  </TouchableOpacity>
+                ))}
+              </>
+            )}
           </View>
         )}
 
         {/* Action Buttons */}
         <View style={themed(styles.buttonContainer)}>
+          {/* Complete and Cancel buttons - Only for lawyers on active cases with IN_PROGRESS state */}
           <Pressable
             style={themed(styles.primaryButton)}
             onPress={handleChatPress}
@@ -392,9 +475,76 @@ export const CaseDetail = () => {
               color={theme.colors.onPrimary}
             />
             <Text style={themed(styles.primaryButtonText)}>
-              {t('caseDetail.contactLawyer')}
+              {isLawyer
+                ? t('caseDetail.contactClient')
+                : t('caseDetail.contactLawyer')}
             </Text>
           </Pressable>
+          {isLawyer &&
+            !isDisplayPending &&
+            (displayCase as Case).state === 'IN_PROGRESS' && (
+              <>
+                {/* Contact button */}
+
+                <TouchableOpacity
+                  style={[
+                    themed(styles.completeButton),
+                    isUpdatingState && themed(styles.buttonDisabled),
+                  ]}
+                  onPress={handleCompleteCase}
+                  disabled={isUpdatingState}
+                >
+                  {isUpdatingState ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={theme.colors.onPrimary}
+                    />
+                  ) : (
+                    <>
+                      <Icon
+                        name="checkmark-circle-outline"
+                        size={moderateScale(20)}
+                        color={theme.colors.onPrimary}
+                      />
+                      <Text style={themed(styles.completeButtonText)}>
+                        {t('caseDetail.complete')}
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    themed(styles.cancelButton),
+                    isUpdatingState && themed(styles.buttonDisabled),
+                  ]}
+                  onPress={handleCancelCase}
+                  disabled={isUpdatingState}
+                >
+                  {isUpdatingState ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={theme.colors.error}
+                    />
+                  ) : (
+                    <>
+                      <Icon
+                        name="close-circle-outline"
+                        size={moderateScale(20)}
+                        color={theme.colors.error}
+                      />
+                      <Text
+                        style={[
+                          themed(styles.cancelButtonText),
+                          { color: theme.colors.error },
+                        ]}
+                      >
+                        {t('caseDetail.cancelCase')}
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </>
+            )}
         </View>
       </ScrollView>
       <AddNoteModal

@@ -99,6 +99,44 @@ export const messageSlice = createSlice({
     clearMessages: state => {
       state.messages = [];
     },
+    updateConversationWithNewMessage: (state, action) => {
+      // Cập nhật conversation list khi có tin nhắn mới từ WebSocket
+      const newMessage = action.payload;
+      const conversationId = newMessage.conversation_id;
+
+      // Tìm conversation trong danh sách
+      const conversationIndex = state.conversation.findIndex(
+        c => c.id === conversationId,
+      );
+
+      if (conversationIndex !== -1) {
+        // Cập nhật last_message và last_message_at
+        const updatedConversation = {
+          ...state.conversation[conversationIndex],
+          last_message: newMessage,
+          last_message_at: newMessage.created_at,
+          updated_at: newMessage.created_at,
+        };
+
+        // Xóa conversation cũ và thêm vào đầu danh sách (most recent first)
+        state.conversation.splice(conversationIndex, 1);
+        state.conversation.unshift(updatedConversation);
+      } else {
+        // Nếu conversation chưa có trong list (có thể là conversation mới),
+        // tạo một conversation tạm thời với thông tin từ message
+        // Note: Điều này chỉ tạo một conversation cơ bản, 
+        // có thể cần fetchConversations để lấy đầy đủ thông tin participants
+        const tempConversation: any = {
+          id: conversationId,
+          created_at: newMessage.created_at,
+          updated_at: newMessage.created_at,
+          last_message_at: newMessage.created_at,
+          last_message: newMessage,
+          participants: [], // Sẽ được cập nhật khi fetch lại
+        };
+        state.conversation.unshift(tempConversation);
+      }
+    },
   },
   extraReducers: builder => {
     builder

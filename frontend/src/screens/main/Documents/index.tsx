@@ -29,7 +29,7 @@ import { useAppDispatch, useAppSelector } from '../../../redux/hook';
 const ItemSeparator = () => <View style={{ height: moderateScale(12) }} />;
 
 export default function DocumentsScreen() {
-  const { themed } = useAppTheme();
+  const { themed, theme } = useAppTheme();
   const { t } = useTranslation();
   const [selectedFilter, setSelectedFilter] = useState('All');
   const documents = useAppSelector(selectDocuments);
@@ -60,7 +60,7 @@ export default function DocumentsScreen() {
         <Ionicons
           name="document-text-outline"
           size={moderateScale(24)}
-          color={themed(({ colors }) => colors.onSurfaceVariant)}
+          color={theme.colors.primary}
         />
       </View>
       <View style={themed(styles.documentInfo)}>

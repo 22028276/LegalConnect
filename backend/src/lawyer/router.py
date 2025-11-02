@@ -139,34 +139,17 @@ def _ensure_admin(user: User) -> None:
         raise RequestForbidden()
 
 
-def _desired_display_name(user: User | None) -> str:
-    if user and user.username:
-        normalized = user.username.strip()
-        if normalized:
-            return normalized
-    return "Lawyer"
-
-
-def _sync_profile_display_name(profile: LawyerProfile, user: User | None) -> bool:
-    desired = _desired_display_name(user)
-    if profile.display_name != desired:
-        profile.display_name = desired
-        return True
-    return False
-
-
 async def _build_profile_response(db: SessionDep,
                                   profile: LawyerProfile, 
                                   user: User
                                   ) -> LawyerProfileResponse:
     
     rating = await calculate_lawyer_rating(db, profile.user_id)
-    display_name = _desired_display_name(user)
 
     return LawyerProfileResponse(
         id = profile.id,
         user_id = profile.user_id,
-        display_name = display_name,
+        display_name = profile.display_name,
         email = user.email,
         phone_number = profile.phone_number,
         website_url = profile.website_url,
@@ -384,11 +367,11 @@ async def approve_lawyer_verification_request(request_id: UUID,
         user.role = UserRole.LAWYER.value
 
     profile = await _get_lawyer_profile(db, request.user_id)
-    desired_display = _desired_display_name(user)
     if not profile:
+        display_name = (user.username if user else "Lawyer").strip() or "Lawyer"
         profile = LawyerProfile(
             user_id=request.user_id,
-            display_name=desired_display,
+            display_name=display_name,
             phone_number=user.phone_number if user else None,
             office_address=user.address if user else None,
             current_level=request.current_job_position,
@@ -398,7 +381,6 @@ async def approve_lawyer_verification_request(request_id: UUID,
     else:
         profile.current_level = request.current_job_position
         profile.years_of_experience = request.years_of_experience
-        _sync_profile_display_name(profile, user)
 
     await db.commit()
     await db.refresh(request)
@@ -537,12 +519,7 @@ async def list_lawyer_profiles(db: SessionDep,
     profiles: list[LawyerProfileResponse] = []
     updated = False
     for profile, user in records:
-        if _sync_profile_display_name(profile, user):
-            updated = True
         profiles.append(await _build_profile_response(db, profile, user))
-
-    if updated:
-        await db.commit()
 
     profiles.sort(
         key=lambda item: (
@@ -569,9 +546,6 @@ async def get_public_lawyer_profile(lawyer_id: UUID,
     if not user or user.role != UserRole.LAWYER.value:
         raise LawyerProfileNotFound()
 
-    if _sync_profile_display_name(profile, user):
-        await db.commit()
-
     return await _build_profile_response(db, profile, user)
 
 
@@ -589,9 +563,6 @@ async def get_my_lawyer_profile(db: SessionDep,
         raise LawyerProfileNotFound()
 
     user = await db.get(User, current_user.id) or current_user
-    if _sync_profile_display_name(profile, user):
-        await db.commit()
-        
     return await _build_profile_response(db, profile, user)
 
 
@@ -611,12 +582,6 @@ async def update_my_lawyer_profile(payload: LawyerProfileUpdatePayload,
 
     update_data = payload.model_dump(exclude_unset=True)
 
-    desired_display = _desired_display_name(current_user)
-    if "display_name" in update_data:
-        requested_display = update_data.pop("display_name")
-        if requested_display is not None and requested_display.strip() and requested_display.strip() != desired_display:
-            raise LawyerProfileInvalidField("Display name must match your username.")
-        
     if "speaking_languages" in update_data:
         languages = update_data["speaking_languages"]
         sanitized_languages = [
@@ -635,6 +600,7 @@ async def update_my_lawyer_profile(payload: LawyerProfileUpdatePayload,
         return normalized
 
     str_mappings = {
+        "display_name": "Display name",
         "phone_number": "Phone number",
         "website_url": "Website URL",
         "office_address": "Office address",
@@ -647,14 +613,14 @@ async def update_my_lawyer_profile(payload: LawyerProfileUpdatePayload,
 
         value = update_data[field]
         if value is None:
+            if field == "display_name":
+                raise LawyerProfileInvalidField("Display name is required.")
             setattr(profile, field, None)
             continue
 
         normalized = _normalize(value, label)
         setattr(profile, field, normalized)
 
-    _sync_profile_display_name(profile, current_user)
-    
     await db.commit()
     await db.refresh(profile)
 

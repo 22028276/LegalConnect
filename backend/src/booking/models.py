@@ -20,7 +20,6 @@ class LawyerScheduleSlot(Base):
     start_time: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False)
     end_time: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False)
     is_booked: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    expired: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
 
 class BookingRequest(Base):
@@ -99,4 +98,3 @@ class LawyerRating(Base):
         nullable=False,
     )
     stars: Mapped[int] = mapped_column(Integer, nullable=False)
-    detailed_review: Mapped[str] = mapped_column(Text, nullable=False)

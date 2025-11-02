@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Text,
@@ -91,9 +92,10 @@ export default function ChatDetailScreen({ route }: { route: any }) {
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
 
-  const { chatId, name } = route.params;
+  const { chatId, name, avatar } = route.params;
   console.log('chatId: ', chatId);
   console.log('name: ', name);
+  console.log('avatar: ', avatar);
   const messageList = useAppSelector((state: any) => state?.message?.messages);
   const loadingMessages = useAppSelector(
     (state: any) => state?.message?.loadingMessages,
@@ -210,15 +212,22 @@ export default function ChatDetailScreen({ route }: { route: any }) {
           {/* <Image source={{ uri: avatar }} style={themed(styles.headerAvatar)} />
            */}
           <View style={themed(styles.avatarPlaceholder)}>
-            <Ionicons
-              name="person"
-              size={moderateScale(16)}
-              color={theme.colors.onSurfaceVariant}
-            />
+            {avatar ? (
+              <Image
+                source={{ uri: avatar }}
+                style={themed(styles.headerAvatar)}
+              />
+            ) : (
+              <Ionicons
+                name="person"
+                size={moderateScale(16)}
+                color={theme.colors.onSurfaceVariant}
+              />
+            )}
           </View>
           <Text style={themed(styles.headerName)}>{name}</Text>
         </View>
-        <View style={themed(styles.headerActions)}>
+        {/* <View style={themed(styles.headerActions)}>
           <TouchableOpacity style={themed(styles.actionButton)}>
             <Ionicons
               name="call"
@@ -233,7 +242,7 @@ export default function ChatDetailScreen({ route }: { route: any }) {
               color="#000"
             />
           </TouchableOpacity>
-        </View>
+        </View> */}
       </View>
 
       {/* Messages */}
@@ -265,9 +274,9 @@ export default function ChatDetailScreen({ route }: { route: any }) {
       >
         <View style={themed(styles.inputContainer)}>
           <View style={themed(styles.inputRow)}>
-            <TouchableOpacity style={themed(styles.inputButton)}>
+            {/* <TouchableOpacity style={themed(styles.inputButton)}>
               <Ionicons name="add" size={moderateScale(20)} color="#666" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             {/* <TouchableOpacity style={themed(styles.inputButton)}>
               <Ionicons
                 name="happy-outline"
@@ -288,7 +297,11 @@ export default function ChatDetailScreen({ route }: { route: any }) {
               style={themed(styles.sendButton)}
               onPress={sendMessage}
             >
-              <Ionicons name="send" size={moderateScale(20)} color="#007AFF" />
+              <Ionicons
+                name="send"
+                size={moderateScale(20)}
+                color={theme.colors.primary}
+              />
             </TouchableOpacity>
           </View>
         </View>

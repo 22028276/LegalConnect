@@ -48,7 +48,8 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
     } catch (error: any) {
       showError(
         t('admin.error'),
-        error?.response?.data?.message || t('admin.failedToFetchRequestDetails'),
+        error?.response?.data?.message ||
+          t('admin.failedToFetchRequestDetails'),
       );
       navigation.goBack();
     } finally {
@@ -132,12 +133,16 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
           onPress: async () => {
             try {
               await approveVerificationRequest(requestId);
-              showSuccess(t('common.success'), t('admin.requestApprovedSuccessfully'));
+              showSuccess(
+                t('common.success'),
+                t('admin.requestApprovedSuccessfully'),
+              );
               navigation.goBack();
             } catch (error: any) {
               showError(
                 t('admin.error'),
-                error?.response?.data?.message || t('admin.failedToApproveRequest'),
+                error?.response?.data?.message ||
+                  t('admin.failedToApproveRequest'),
               );
             }
           },
@@ -147,7 +152,7 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
   };
 
   const handleReject = async () => {
-    Alert.prompt(
+    Alert.alert(
       t('admin.rejectRequest'),
       t('admin.rejectRequestPrompt'),
       [
@@ -162,18 +167,22 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
             }
             try {
               await rejectVerificationRequest(requestId, reason.trim());
-              showSuccess(t('common.success'), t('admin.requestRejectedSuccessfully'));
+              showSuccess(
+                t('common.success'),
+                t('admin.requestRejectedSuccessfully'),
+              );
               navigation.goBack();
             } catch (error: any) {
               showError(
                 t('admin.error'),
-                error?.response?.data?.message || t('admin.failedToRejectRequest'),
+                error?.response?.data?.message ||
+                  t('admin.failedToRejectRequest'),
               );
             }
           },
         },
       ],
-      'plain-text',
+      { cancelable: true },
     );
   };
 
@@ -193,7 +202,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
       <SafeAreaView style={themed(styles.container)} edges={['top', 'bottom']}>
         <Header title={t('admin.requestDetails')} showBackButton />
         <View style={themed(styles.loadingContainer)}>
-          <Text style={themed(styles.infoValue)}>{t('admin.requestNotFound')}</Text>
+          <Text style={themed(styles.infoValue)}>
+            {t('admin.requestNotFound')}
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -228,7 +239,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
 
         {/* User Information Section */}
         <View style={themed(styles.section)}>
-          <Text style={themed(styles.sectionTitle)}>{t('admin.userInformation')}</Text>
+          <Text style={themed(styles.sectionTitle)}>
+            {t('admin.userInformation')}
+          </Text>
 
           <View style={themed(styles.infoRow)}>
             <Ionicons
@@ -341,7 +354,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               size={moderateScale(20)}
               color={theme.colors.onSurfaceVariant}
             />
-            <Text style={themed(styles.infoLabel)}>{t('admin.currentPosition')}:</Text>
+            <Text style={themed(styles.infoLabel)}>
+              {t('admin.currentPosition')}:
+            </Text>
             <Text style={themed(styles.infoValue)}>
               {request.current_job_position}
             </Text>
@@ -353,7 +368,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               size={moderateScale(20)}
               color={theme.colors.onSurfaceVariant}
             />
-            <Text style={themed(styles.infoLabel)}>{t('admin.yearsOfExperience')}:</Text>
+            <Text style={themed(styles.infoLabel)}>
+              {t('admin.yearsOfExperience')}:
+            </Text>
             <Text style={themed(styles.infoValue)}>
               {request.years_of_experience} {t('admin.years')}
             </Text>
@@ -370,7 +387,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
             {/* Row 1: Portrait Photo & ID Card Front */}
             <View style={themed(styles.imageRow)}>
               <View style={themed(styles.imageContainer)}>
-                <Text style={themed(styles.imageLabel)}>{t('admin.portraitPhoto')}</Text>
+                <Text style={themed(styles.imageLabel)}>
+                  {t('admin.portraitPhoto')}
+                </Text>
                 <TouchableOpacity
                   style={themed(styles.imageCard)}
                   onPress={() =>
@@ -404,7 +423,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               </View>
 
               <View style={themed(styles.imageContainer)}>
-                <Text style={themed(styles.imageLabel)}>{t('admin.idCardFront')}</Text>
+                <Text style={themed(styles.imageLabel)}>
+                  {t('admin.idCardFront')}
+                </Text>
                 <TouchableOpacity
                   style={themed(styles.imageCard)}
                   onPress={() =>
@@ -441,7 +462,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
             {/* Row 2: ID Card Back & Law Certificate */}
             <View style={themed(styles.imageRow)}>
               <View style={themed(styles.imageContainer)}>
-                <Text style={themed(styles.imageLabel)}>{t('admin.idCardBack')}</Text>
+                <Text style={themed(styles.imageLabel)}>
+                  {t('admin.idCardBack')}
+                </Text>
                 <TouchableOpacity
                   style={themed(styles.imageCard)}
                   onPress={() =>
@@ -475,7 +498,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               </View>
 
               <View style={themed(styles.imageContainer)}>
-                <Text style={themed(styles.imageLabel)}>{t('admin.lawCertificate')}</Text>
+                <Text style={themed(styles.imageLabel)}>
+                  {t('admin.lawCertificate')}
+                </Text>
                 <TouchableOpacity
                   style={themed(styles.imageCard)}
                   onPress={() =>
@@ -524,7 +549,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
             {/* Row 3: Bachelor Degree */}
             <View style={themed(styles.imageRow)}>
               <View style={themed(styles.imageContainer)}>
-                <Text style={themed(styles.imageLabel)}>{t('admin.bachelorDegree')}</Text>
+                <Text style={themed(styles.imageLabel)}>
+                  {t('admin.bachelorDegree')}
+                </Text>
                 <TouchableOpacity
                   style={themed(styles.imageCard)}
                   onPress={() =>
@@ -577,7 +604,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
         {/* Rejection Reason (if rejected) */}
         {request.status === 'rejected' && request.rejection_reason && (
           <View style={themed(styles.rejectionSection)}>
-            <Text style={themed(styles.rejectionTitle)}>{t('admin.rejectionReason')}</Text>
+            <Text style={themed(styles.rejectionTitle)}>
+              {t('admin.rejectionReason')}
+            </Text>
             <Text style={themed(styles.rejectionText)}>
               {request.rejection_reason}
             </Text>
@@ -586,7 +615,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
 
         {/* Request Timeline */}
         <View style={themed(styles.section)}>
-          <Text style={themed(styles.sectionTitle)}>{t('admin.requestTimeline')}</Text>
+          <Text style={themed(styles.sectionTitle)}>
+            {t('admin.requestTimeline')}
+          </Text>
 
           <View style={themed(styles.infoRow)}>
             <Ionicons
@@ -606,7 +637,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               size={moderateScale(20)}
               color={theme.colors.onSurfaceVariant}
             />
-            <Text style={themed(styles.infoLabel)}>{t('admin.lastUpdated')}:</Text>
+            <Text style={themed(styles.infoLabel)}>
+              {t('admin.lastUpdated')}:
+            </Text>
             <Text style={themed(styles.infoValue)}>
               {formatDate(request.updated_at)}
             </Text>
@@ -619,7 +652,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
                 size={moderateScale(20)}
                 color={theme.colors.onSurfaceVariant}
               />
-              <Text style={themed(styles.infoLabel)}>{t('admin.reviewed')}:</Text>
+              <Text style={themed(styles.infoLabel)}>
+                {t('admin.reviewed')}:
+              </Text>
               <Text style={themed(styles.infoValue)}>
                 {formatDate(request.reviewed_at)}
               </Text>
@@ -633,7 +668,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
                 size={moderateScale(20)}
                 color={theme.colors.onSurfaceVariant}
               />
-              <Text style={themed(styles.infoLabel)}>{t('admin.reviewedBy')}:</Text>
+              <Text style={themed(styles.infoLabel)}>
+                {t('admin.reviewedBy')}:
+              </Text>
               <Text style={themed(styles.infoValue)} numberOfLines={1}>
                 {request.reviewed_by_admin_id}
               </Text>
@@ -654,7 +691,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               size={moderateScale(24)}
               color={theme.colors.inverseOnSurface}
             />
-            <Text style={themed(styles.buttonText)}>{t('admin.approveRequest')}</Text>
+            <Text style={themed(styles.buttonText)}>
+              {t('admin.approveRequest')}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -666,7 +705,9 @@ export default function VerificationRequestDetail({ route }: { route: any }) {
               size={moderateScale(24)}
               color={theme.colors.inverseOnSurface}
             />
-            <Text style={themed(styles.buttonText)}>{t('admin.rejectRequest')}</Text>
+            <Text style={themed(styles.buttonText)}>
+              {t('admin.rejectRequest')}
+            </Text>
           </TouchableOpacity>
         </View>
       )}
