@@ -1,7 +1,8 @@
 import uuid
+from typing import Any
 
 from pathlib import Path
-from fastapi import APIRouter, Depends, Body, File, UploadFile
+from fastapi import APIRouter, Depends, Body, File, Form, UploadFile, Request
 from sqlalchemy.future import select
 from arq import create_pool
 from arq.connections import RedisSettings
@@ -12,8 +13,7 @@ from src.core.config import settings
 from src.user.models import User
 from src.user.schemas import (
     UserCreate, 
-    UserResponse, 
-    UserUpdate,
+    UserResponse,
     UserRoleUpdate,
     ForgetPasswordRequest
 )
@@ -91,37 +91,15 @@ async def get_user(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-@user_route.put('/update', response_model=UserResponse)
-async def update_user(db: SessionDep, 
-                      update_request: UserUpdate, 
-                      current_user: User = Depends(get_current_user)):
-    
-    result = await db.execute(select(User).where(User.id == current_user.id))
-    curr_user = result.scalar_one_or_none()
-    if not curr_user:
-        raise UserNotFound()
-    
-    update_data = update_request.model_dump(exclude_unset=True)
-    if "password" in update_data:
-        update_data["hashed_password"] = hash_password(update_data.pop("password"))
-    for key, value in update_data.items():
-        setattr(curr_user, key, value)
-
-    await db.commit()
-    await db.refresh(curr_user)
-
-    return curr_user
-
-
-@user_route.post('/avatar', response_model=UserResponse)
-async def upload_avatar(db: SessionDep,
-                        avatar: UploadFile = File(...),
-                        current_user: User = Depends(get_current_user)):
-
+async def _store_avatar_and_get_key(current_user: User, avatar: UploadFile) -> str:
     file_suffix = Path(avatar.filename or "").suffix.lower()
     content_type = avatar.content_type or ""
 
-    if content_type not in ALLOWED_AVATAR_CONTENT_TYPES or file_suffix not in ALLOWED_AVATAR_EXTENSIONS:
+    if (
+        content_type not in ALLOWED_AVATAR_CONTENT_TYPES
+        or file_suffix not in ALLOWED_AVATAR_EXTENSIONS
+    ):
+        await avatar.close()
         raise InvalidAvatarFile()
 
     file_bytes = await avatar.read()
@@ -135,6 +113,60 @@ async def upload_avatar(db: SessionDep,
 
     if not uploaded_key:
         raise AvatarUploadFailed()
+
+    return uploaded_key
+
+
+@user_route.put('/update', response_model=UserResponse)
+async def update_user(
+    db: SessionDep,
+    username: str | None = Form(default=None),
+    password: str | None = Form(default=None),
+    phone_number: str | None = Form(default=None),
+    address: str | None = Form(default=None),
+    avatar: UploadFile | None = File(default=None),
+    current_user: User = Depends(get_current_user),
+):
+    
+    result = await db.execute(select(User).where(User.id == current_user.id))
+    curr_user = result.scalar_one_or_none()
+    if not curr_user:
+        raise UserNotFound()
+    
+    update_data: dict[str, Any] = {}
+
+    if username is not None:
+        update_data["username"] = username.strip()
+    if password is not None:
+        update_data["hashed_password"] = hash_password(password)
+    if phone_number is not None:
+        update_data["phone_number"] = phone_number.strip() if phone_number else phone_number
+    if address is not None:
+        update_data["address"] = address.strip() if address else address
+
+    for key, value in update_data.items():
+        setattr(curr_user, key, value)
+
+    if avatar is not None:
+        uploaded_key = await _store_avatar_and_get_key(curr_user, avatar)
+        new_avatar_url = build_avatar_url(uploaded_key)
+        previous_key = extract_key_from_avatar_url(curr_user.avatar_url)
+        if previous_key and previous_key != uploaded_key:
+            await delete_avatar_from_s3(previous_key)
+        curr_user.avatar_url = new_avatar_url
+
+    await db.commit()
+    await db.refresh(curr_user)
+
+    return curr_user
+
+
+@user_route.post('/avatar', response_model=UserResponse)
+async def upload_avatar(db: SessionDep,
+                        avatar: UploadFile = File(...),
+                        current_user: User = Depends(get_current_user)):
+
+    uploaded_key = await _store_avatar_and_get_key(current_user, avatar)
 
     new_avatar_url = build_avatar_url(uploaded_key)
 

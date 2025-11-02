@@ -28,7 +28,6 @@ class UserUpdate(BaseModel):
     password: Optional[str] = None
     phone_number: Optional[str] = None
     address: Optional[str] = None
-    avatar_url: Optional[str] = None
 
 class UserRoleUpdate(BaseModel):
     role: UserRole

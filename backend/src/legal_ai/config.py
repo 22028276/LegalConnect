@@ -18,6 +18,7 @@ class LegalAIConfig:
     suggestion_count: int
     disclaimer: str
     log_sample_rate: float
+    guidance_dataset_path: Path | None
 
     @classmethod
     def from_settings(cls) -> "LegalAIConfig":
@@ -32,4 +33,9 @@ class LegalAIConfig:
             suggestion_count=settings.LEGAL_AI_SUGGESTION_COUNT,
             disclaimer=settings.LEGAL_AI_DISCLAIMER,
             log_sample_rate=settings.LEGAL_AI_LOG_SAMPLE_RATE,
-        )
+            guidance_dataset_path=(
+                    Path(settings.LEGAL_AI_GUIDANCE_DATASET_PATH)
+                    if settings.LEGAL_AI_GUIDANCE_DATASET_PATH
+                    else None
+                ),
+            )

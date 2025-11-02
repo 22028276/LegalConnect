@@ -80,6 +80,19 @@ async def _get_schedule_slot(db: SessionDep, slot_id: UUID) -> LawyerScheduleSlo
     return slot
 
 
+def _build_rating_response(rating: LawyerRating) -> RatingResponse:
+    return RatingResponse(
+        id=rating.id,
+        case_history_id=rating.case_history_id,
+        lawyer_id=rating.lawyer_id,
+        client_id=rating.client_id,
+        stars=rating.stars,
+        detailed_review=rating.detailed_review,
+        create_at=rating.create_at,
+        updated_at=rating.updated_at,
+    )
+
+
 async def _get_booking(db: SessionDep, booking_id: UUID) -> BookingRequest:
     booking = await db.get(BookingRequest, booking_id)
     if not booking:
@@ -628,16 +641,7 @@ async def rate_case(
     await db.commit()
     await db.refresh(rating)
 
-    return RatingResponse(
-        id=rating.id,
-        case_history_id=rating.case_history_id,
-        lawyer_id=rating.lawyer_id,
-        client_id=rating.client_id,
-        stars=rating.stars,
-        detailed_review=rating.detailed_review,
-        create_at=rating.create_at,
-        updated_at=rating.updated_at,
-    )
+    return _build_rating_response(rating)
 
 
 @booking_route.get("/cases/{case_id}/rating", response_model=RatingResponse | None)
@@ -656,13 +660,21 @@ async def get_case_rating(
     if not rating:
         return None
 
-    return RatingResponse(
-        id=rating.id,
-        case_history_id=rating.case_history_id,
-        lawyer_id=rating.lawyer_id,
-        client_id=rating.client_id,
-        stars=rating.stars,
-        detailed_review=rating.detailed_review,
-        create_at=rating.create_at,
-        updated_at=rating.updated_at,
+    return _build_rating_response(rating)
+
+
+@booking_route.get("/lawyers/{lawyer_id}/ratings", response_model=List[RatingResponse])
+async def get_lawyer_ratings(
+    lawyer_id: UUID,
+    db: SessionDep,
+    current_user: User = Depends(get_current_user),
+) -> List[RatingResponse]:
+
+    ratings_result = await db.execute(
+        select(LawyerRating)
+        .where(LawyerRating.lawyer_id == lawyer_id)
+        .order_by(LawyerRating.create_at.desc())
     )
+    ratings = ratings_result.scalars().all()
+
+    return [_build_rating_response(rating) for rating in ratings]

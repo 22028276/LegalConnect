@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 import time
 
+import pandas as pd
+
 from fastapi import HTTPException, status
 
 from src.core.base_model import time_now
@@ -54,6 +56,12 @@ class LegalChatbotService:
     def from_settings(cls) -> "LegalChatbotService":
         config = LegalAIConfig.from_settings()
         dataset = clean_dataset(load_dataset(config.dataset_path))
+        datasets = [dataset]
+        if config.guidance_dataset_path:
+            guidance_dataset = clean_dataset(load_dataset(config.guidance_dataset_path))
+            datasets.append(guidance_dataset)
+        if len(datasets) > 1:
+            dataset = clean_dataset(pd.concat(datasets, ignore_index=True))
         knowledge_base = LegalKnowledgeBase(list(iter_examples(dataset)))
         llm_client: LLMClient | None = None
         if config.provider_base_url:
