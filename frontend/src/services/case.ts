@@ -243,3 +243,37 @@ export const updateCaseNote = async (
     throw new Error(message);
   }
 };
+
+export interface UpdateCaseStatePayload {
+  title: string;
+  description: string;
+  state: 'COMPLETED' | 'CANCELLED';
+}
+
+export const updateCaseState = async (
+  caseId: string,
+  data: UpdateCaseStatePayload,
+): Promise<any> => {
+  try {
+    const response = await axios.patch(`/booking/cases/${caseId}`, data, {
+      baseURL: envConfig.baseUrl,
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const payload = response?.data?.data ?? response?.data;
+    const stateMessage = data.state === 'COMPLETED' 
+      ? t('toast.caseCompleted') || 'Case marked as completed'
+      : t('toast.caseCancelled') || 'Case marked as cancelled';
+    showSuccess(stateMessage);
+    return payload;
+  } catch (error: any) {
+    const errmsg = error?.response?.data;
+    const message =
+      errmsg?.message ||
+      errmsg?.detail ||
+      errmsg?.error ||
+      error?.message ||
+      'Failed to update case state';
+    showError('Failed to update case state', message);
+    throw new Error(message);
+  }
+};

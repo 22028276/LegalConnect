@@ -34,6 +34,8 @@ import { AddNoteModal } from '../NoteModal';
 import { AddFileModal } from '../AddFileModal';
 import { store } from '../../../../redux/store';
 import { selectRole } from '../../../../stores/user.slice';
+import { updateCaseState } from '../../../../services/case';
+import { Alert } from 'react-native';
 
 type CaseDetailRouteProp = RouteProp<
   {
@@ -52,6 +54,7 @@ export const CaseDetail = () => {
   const dispatch = useAppDispatch();
   const [isAddNoteModalVisible, setIsAddNoteModalVisible] = useState(false);
   const [isAddFileModalVisible, setIsAddFileModalVisible] = useState(false);
+  const [isUpdatingState, setIsUpdatingState] = useState(false);
   const { caseId, isPending } = route.params;
   const caseData = useAppSelector(selectCurrentCase);
   const isLoading = useAppSelector(selectIsLoading);
@@ -197,6 +200,75 @@ export const CaseDetail = () => {
     } else {
       dispatch(fetchUserCaseById(caseId));
     }
+  };
+
+  const handleCompleteCase = async () => {
+    if (!displayCase || isDisplayPending) return;
+
+    const caseItem = displayCase as Case;
+    Alert.alert(
+      t('caseDetail.completeCase'),
+      t('caseDetail.completeCaseConfirm'),
+      [
+        {
+          text: t('caseDetail.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('caseDetail.complete'),
+          onPress: async () => {
+            setIsUpdatingState(true);
+            try {
+              await updateCaseState(caseId, {
+                title: caseItem.title,
+                description: caseItem.description,
+                state: 'COMPLETED',
+              });
+              refetchCase();
+            } catch (error) {
+              console.error('Failed to complete case:', error);
+            } finally {
+              setIsUpdatingState(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleCancelCase = async () => {
+    if (!displayCase || isDisplayPending) return;
+
+    const caseItem = displayCase as Case;
+    Alert.alert(
+      t('caseDetail.cancelCase'),
+      t('caseDetail.cancelCaseConfirm'),
+      [
+        {
+          text: t('caseDetail.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('caseDetail.confirmCancel'),
+          style: 'destructive',
+          onPress: async () => {
+            setIsUpdatingState(true);
+            try {
+              await updateCaseState(caseId, {
+                title: caseItem.title,
+                description: caseItem.description,
+                state: 'CANCELLED',
+              });
+              refetchCase();
+            } catch (error) {
+              console.error('Failed to cancel case:', error);
+            } finally {
+              setIsUpdatingState(false);
+            }
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -396,6 +468,54 @@ export const CaseDetail = () => {
 
         {/* Action Buttons */}
         <View style={themed(styles.buttonContainer)}>
+          {/* Complete and Cancel buttons - Only for active cases with IN_PROGRESS state */}
+          {!isDisplayPending && 
+           (displayCase as Case).state === 'IN_PROGRESS' && (
+            <>
+              <TouchableOpacity
+                style={[themed(styles.completeButton), isUpdatingState && themed(styles.buttonDisabled)]}
+                onPress={handleCompleteCase}
+                disabled={isUpdatingState}
+              >
+                {isUpdatingState ? (
+                  <ActivityIndicator size="small" color={theme.colors.onPrimary} />
+                ) : (
+                  <>
+                    <Icon
+                      name="checkmark-circle-outline"
+                      size={moderateScale(20)}
+                      color={theme.colors.onPrimary}
+                    />
+                    <Text style={themed(styles.completeButtonText)}>
+                      {t('caseDetail.complete')}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[themed(styles.cancelButton), isUpdatingState && themed(styles.buttonDisabled)]}
+                onPress={handleCancelCase}
+                disabled={isUpdatingState}
+              >
+                {isUpdatingState ? (
+                  <ActivityIndicator size="small" color={theme.colors.error} />
+                ) : (
+                  <>
+                    <Icon
+                      name="close-circle-outline"
+                      size={moderateScale(20)}
+                      color={theme.colors.error}
+                    />
+                    <Text style={[themed(styles.cancelButtonText), { color: theme.colors.error }]}>
+                      {t('caseDetail.cancelCase')}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </>
+          )}
+          
+          {/* Contact button */}
           <Pressable
             style={themed(styles.primaryButton)}
             onPress={handleChatPress}
@@ -406,7 +526,7 @@ export const CaseDetail = () => {
               color={theme.colors.onPrimary}
             />
             <Text style={themed(styles.primaryButtonText)}>
-              {t('caseDetail.contactLawyer')}
+              {isLawyer ? t('caseDetail.contactClient') : t('caseDetail.contactLawyer')}
             </Text>
           </Pressable>
         </View>
