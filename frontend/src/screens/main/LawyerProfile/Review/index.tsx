@@ -56,9 +56,9 @@ export default function Review({ lawyerId }: { lawyerId: string }) {
         data={ratings}
         renderItem={({ item }) => (
           <ReviewCard
-            name={`Client ${item.client_id.slice(0, 8)}`}
+            name={`${t('lawyerProfile.client')} ${item.client_id.slice(0, 8)}`}
             date={new Date(item.create_at).toLocaleDateString()}
-            reviewText={`Rated ${item.stars} stars`}
+            reviewText={t('lawyerProfile.ratedStars', { stars: item.stars })}
             rating={item.stars}
             profileImage={undefined}
             reviewImages={undefined}

@@ -23,7 +23,7 @@ class SearchLawyerResult(BaseModel):
 
 class SearchDocumentResult(BaseModel):
     type: Literal[SearchResultType.DOCUMENT] = Field(
-        default=SearchResultType.DOCUMENT, const=True
+        default=SearchResultType.DOCUMENT
     )
     document_id: UUID
     display_name: str

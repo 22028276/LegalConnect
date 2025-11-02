@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../../../../components/layout/header';
 import {
@@ -7,53 +7,94 @@ import {
   View,
   Pressable,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { useAppTheme } from '../../../../theme/theme.provider';
-import { RouteProp, useRoute } from '@react-navigation/native';
-import { Case } from '../../../../types/case';
+import {
+  NavigationProp,
+  RouteProp,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
+import { Case, BookingRequest } from '../../../../types/case';
 import Icon from '@react-native-vector-icons/ionicons';
 import { moderateScale } from 'react-native-size-matters';
 import * as styles from './styles';
 import { t } from '../../../../i18n';
+import { MainStackNames } from '../../../../navigation/routes';
+import { createNewConversation } from '../../../../stores/message.slice';
+import { useAppDispatch, useAppSelector } from '../../../../redux/hook';
+import {
+  fetchPendingCaseById,
+  fetchUserCaseById,
+  selectCurrentCase,
+  selectIsLoading,
+} from '../../../../stores/case.slice';
+import { AddNoteModal } from '../NoteModal';
+import { AddFileModal } from '../AddFileModal';
 
-type CaseDetailRouteProp = RouteProp<{ params: { caseData?: Case } }, 'params'>;
+type CaseDetailRouteProp = RouteProp<
+  {
+    params: {
+      caseId: string;
+      isPending: boolean;
+    };
+  },
+  'params'
+>;
 
 export const CaseDetail = () => {
   const { themed, theme } = useAppTheme();
   const route = useRoute<CaseDetailRouteProp>();
-  const caseData = route.params?.caseData;
+  const navigation = useNavigation<NavigationProp<any>>();
+  const dispatch = useAppDispatch();
+  const [isAddNoteModalVisible, setIsAddNoteModalVisible] = useState(false);
+  const [isAddFileModalVisible, setIsAddFileModalVisible] = useState(false);
+  const { caseId, isPending } = route.params;
+  const caseData = useAppSelector(selectCurrentCase);
+  const isLoading = useAppSelector(selectIsLoading);
 
-  // Mock data if no case data is passed
-  const mockCase: Case = {
-    id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-    booking_request_id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-    lawyer_id: '901abd0c-06ff-437d-b621-50bc0b1d81ae',
-    client_id: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-    title: 'Property Dispute Case',
-    description:
-      'I need to hire a lawyer for my property dispute case. The neighbor has been encroaching on my land and refuses to acknowledge the property boundaries despite clear survey evidence.',
-    state: 'IN_PROGRESS',
-    attachment_urls: [
-      'https://example.com/document1.pdf',
-      'https://example.com/document2.pdf',
-    ],
-    lawyer_note:
-      'Initial consultation completed. Gathering evidence for court filing.',
-    client_note: 'Please review the survey documents I uploaded.',
-    started_at: '2025-01-15T10:00:00Z',
-    ending_time: '2025-03-15T10:00:00Z',
-    create_at: '2025-01-10T08:30:00Z',
-    updated_at: '2025-01-20T14:45:00Z',
+  useEffect(() => {
+    // Fetch case data based on type
+    if (isPending) {
+      dispatch(fetchPendingCaseById(caseId));
+    } else {
+      dispatch(fetchUserCaseById(caseId));
+    }
+  }, [dispatch, caseId, isPending]);
+
+  // Show loading state
+  if (isLoading || !caseData) {
+    return (
+      <SafeAreaView style={themed(styles.container)}>
+        <Header title={t('caseDetail.loading')} showBackButton={true} />
+        <View style={themed(styles.loadingContainer)}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const displayCase = caseData;
+
+  // Helper function to check if item is BookingRequest (pending case)
+  const isBookingRequest = (
+    item: Case | BookingRequest | null,
+  ): item is BookingRequest => {
+    return item !== null && 'short_description' in item && 'status' in item;
   };
 
-  const displayCase = caseData || mockCase;
+  const isDisplayPending = isBookingRequest(displayCase);
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'PENDING':
       case 'IN_PROGRESS':
         return theme.colors.processStatus.pending;
+      case 'APPROVED':
       case 'COMPLETED':
         return theme.colors.processStatus.approved;
+      case 'REJECTED':
       case 'CANCELLED':
         return theme.colors.processStatus.rejected;
       default:
@@ -61,7 +102,21 @@ export const CaseDetail = () => {
     }
   };
 
-  const statusColors = getStatusColor(displayCase.state);
+  // Get status based on whether it's pending or active case
+  const currentStatus = isDisplayPending
+    ? displayCase.status
+    : (displayCase as Case).state;
+  const statusColors = getStatusColor(currentStatus);
+
+  // Get description based on type
+  const description = isDisplayPending
+    ? displayCase.short_description
+    : (displayCase as Case).description;
+
+  // Get attachment URLs (only for Cases, not BookingRequests)
+  const attachmentUrls = isDisplayPending
+    ? []
+    : (displayCase as Case).attachment_urls || [];
 
   const formatDate = (dateString: string) => {
     try {
@@ -78,9 +133,88 @@ export const CaseDetail = () => {
     }
   };
 
+  const handleChatPress = async () => {
+    try {
+      const response = await dispatch(
+        createNewConversation({
+          receiverId: (displayCase as Case).lawyer_id || '',
+        }),
+      );
+      console.log('Full response:', JSON.stringify(response, null, 2));
+
+      if (response?.payload) {
+        const payload: any = response.payload;
+        console.log('Payload:', payload);
+
+        const conversationId =
+          payload.id ||
+          payload.conversation_id ||
+          payload.participants?.[0]?.conversation_id;
+
+        console.log('Conversation ID:', conversationId);
+
+        if (!conversationId) {
+          console.error('No conversation ID found in response');
+          return;
+        }
+
+        navigation.navigate(MainStackNames.ChatDetail, {
+          chatId: conversationId,
+          name:
+            payload.participants?.[1]?.user?.username ||
+            t('lawyerProfile.lawyer'),
+          avatar: payload.participants?.[1]?.user?.image_url || '',
+        });
+      }
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+    }
+  };
+
+  const handleAddNotePress = () => {
+    console.log('Add note pressed');
+    setIsAddNoteModalVisible(true);
+  };
+
+  const handleAddFilePress = () => {
+    console.log('Add file pressed');
+    setIsAddFileModalVisible(true);
+  };
+
+  const refetchCase = () => {
+    if (isPending) {
+      dispatch(fetchPendingCaseById(caseId));
+    } else {
+      dispatch(fetchUserCaseById(caseId));
+    }
+  };
+
   return (
     <SafeAreaView style={themed(styles.container)}>
-      <Header title={displayCase.title} showBackButton={true} />
+      <Header
+        title={displayCase.title}
+        showBackButton={true}
+        rightIcon={
+          !isDisplayPending ? (
+            <View style={themed(styles.headerActions)}>
+              <TouchableOpacity onPress={handleAddFilePress}>
+                <Icon
+                  name="attach-outline"
+                  size={moderateScale(24)}
+                  color={theme.colors.onSurface}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleAddNotePress}>
+                <Icon
+                  name="add-outline"
+                  size={moderateScale(24)}
+                  color={theme.colors.onSurface}
+                />
+              </TouchableOpacity>
+            </View>
+          ) : null
+        }
+      />
       <ScrollView
         style={themed(styles.scrollView)}
         contentContainerStyle={themed(styles.scrollContent)}
@@ -98,7 +232,7 @@ export const CaseDetail = () => {
               { color: statusColors.textColor },
             ]}
           >
-            {displayCase.state}
+            {currentStatus}
           </Text>
         </View>
 
@@ -107,15 +241,21 @@ export const CaseDetail = () => {
 
         {/* Description Section */}
         <View style={themed(styles.section)}>
-          <Text style={themed(styles.sectionTitle)}>{t('caseDetail.description')}</Text>
-          <Text style={themed(styles.descriptionText)}>
-            {displayCase.description}
+          <Text style={themed(styles.sectionTitle)}>
+            {isDisplayPending
+              ? t('caseDetail.requestDetails')
+              : t('caseDetail.description')}
           </Text>
+          <Text style={themed(styles.descriptionText)}>{description}</Text>
         </View>
 
-        {/* Case Information */}
+        {/* Case Information - Show different info for pending vs active cases */}
         <View style={themed(styles.section)}>
-          <Text style={themed(styles.sectionTitle)}>{t('caseDetail.caseInformation')}</Text>
+          <Text style={themed(styles.sectionTitle)}>
+            {isDisplayPending
+              ? t('caseDetail.requestInformation')
+              : t('caseDetail.caseInformation')}
+          </Text>
           <View style={themed(styles.infoRow)}>
             <Icon
               name="calendar-outline"
@@ -123,9 +263,17 @@ export const CaseDetail = () => {
               color={theme.colors.onSurface}
             />
             <View style={themed(styles.infoTextContainer)}>
-              <Text style={themed(styles.infoLabel)}>{t('caseDetail.startedAt')}</Text>
+              <Text style={themed(styles.infoLabel)}>
+                {isDisplayPending
+                  ? t('caseDetail.desiredStartTime')
+                  : t('caseDetail.startedAt')}
+              </Text>
               <Text style={themed(styles.infoValue)}>
-                {formatDate(displayCase.started_at)}
+                {formatDate(
+                  isDisplayPending
+                    ? displayCase.desired_start_time
+                    : (displayCase as Case).started_at,
+                )}
               </Text>
             </View>
           </View>
@@ -136,9 +284,17 @@ export const CaseDetail = () => {
               color={theme.colors.onSurface}
             />
             <View style={themed(styles.infoTextContainer)}>
-              <Text style={themed(styles.infoLabel)}>{t('caseDetail.expectedEnd')}</Text>
+              <Text style={themed(styles.infoLabel)}>
+                {isDisplayPending
+                  ? t('caseDetail.desiredEndTime')
+                  : t('caseDetail.expectedEnd')}
+              </Text>
               <Text style={themed(styles.infoValue)}>
-                {formatDate(displayCase.ending_time)}
+                {formatDate(
+                  isDisplayPending
+                    ? displayCase.desired_end_time
+                    : (displayCase as Case).ending_time,
+                )}
               </Text>
             </View>
           </View>
@@ -149,7 +305,9 @@ export const CaseDetail = () => {
               color={theme.colors.onSurface}
             />
             <View style={themed(styles.infoTextContainer)}>
-              <Text style={themed(styles.infoLabel)}>{t('caseDetail.lastUpdated')}</Text>
+              <Text style={themed(styles.infoLabel)}>
+                {t('caseDetail.lastUpdated')}
+              </Text>
               <Text style={themed(styles.infoValue)}>
                 {formatDate(displayCase.updated_at)}
               </Text>
@@ -157,87 +315,100 @@ export const CaseDetail = () => {
           </View>
         </View>
 
-        {/* Lawyer Note */}
-        {displayCase.lawyer_note && (
+        {/* Lawyer Note - Only for active cases */}
+        {!isDisplayPending && (displayCase as Case).lawyer_note && (
           <View style={themed(styles.section)}>
-            <Text style={themed(styles.sectionTitle)}>{t('caseDetail.lawyersNote')}</Text>
+            <Text style={themed(styles.sectionTitle)}>
+              {t('caseDetail.lawyersNote')}
+            </Text>
             <View style={themed(styles.noteContainer)}>
               <Text style={themed(styles.noteText)}>
-                {displayCase.lawyer_note}
+                {(displayCase as Case).lawyer_note}
               </Text>
             </View>
           </View>
         )}
 
-        {/* Client Note */}
-        {displayCase.client_note && (
+        {/* Client Note - Only for active cases */}
+        {!isDisplayPending && (displayCase as Case).client_note && (
           <View style={themed(styles.section)}>
-            <Text style={themed(styles.sectionTitle)}>{t('caseDetail.yourNote')}</Text>
+            <Text style={themed(styles.sectionTitle)}>
+              {t('caseDetail.yourNote')}
+            </Text>
             <View style={themed(styles.noteContainer)}>
               <Text style={themed(styles.noteText)}>
-                {displayCase.client_note}
+                {(displayCase as Case).client_note}
               </Text>
             </View>
           </View>
         )}
 
-        {/* Attachments */}
-        {displayCase.attachment_urls &&
-          displayCase.attachment_urls.length > 0 && (
-            <View style={themed(styles.section)}>
-              <Text style={themed(styles.sectionTitle)}>
-                {t('caseDetail.attachments')} ({displayCase.attachment_urls.length})
-              </Text>
-              {displayCase.attachment_urls.map((url, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={themed(styles.attachmentItem)}
-                  onPress={() => {
-                    // TODO: Open attachment
-                    console.log('Open attachment:', url);
-                  }}
-                >
-                  <Icon
-                    name="document-attach-outline"
-                    size={moderateScale(24)}
-                    color={theme.colors.primary}
-                  />
-                  <Text style={themed(styles.attachmentText)}>
-                    {t('caseDetail.attachmentNumber', { number: index + 1 })}
-                  </Text>
-                  <Icon
-                    name="chevron-forward-outline"
-                    size={moderateScale(20)}
-                    color={theme.colors.onSurface}
-                  />
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
+        {/* Attachments - Only for active cases with attachments */}
+        {!isDisplayPending && attachmentUrls.length > 0 && (
+          <View style={themed(styles.section)}>
+            <Text style={themed(styles.sectionTitle)}>
+              {t('caseDetail.attachments')} ({attachmentUrls.length})
+            </Text>
+            {attachmentUrls.map((url, index) => (
+              <TouchableOpacity
+                key={index}
+                style={themed(styles.attachmentItem)}
+                onPress={() => {
+                  navigation.navigate(MainStackNames.PdfViewer, {
+                    url: url,
+                    title: t('caseDetail.attachmentNumber', {
+                      number: index + 1,
+                    }),
+                  });
+                }}
+              >
+                <Icon
+                  name="document-attach-outline"
+                  size={moderateScale(24)}
+                  color={theme.colors.primary}
+                />
+                <Text style={themed(styles.attachmentText)}>
+                  {t('caseDetail.attachmentNumber', { number: index + 1 })}
+                </Text>
+                <Icon
+                  name="chevron-forward-outline"
+                  size={moderateScale(20)}
+                  color={theme.colors.onSurface}
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         {/* Action Buttons */}
         <View style={themed(styles.buttonContainer)}>
-          <Pressable style={themed(styles.primaryButton)}>
+          <Pressable
+            style={themed(styles.primaryButton)}
+            onPress={handleChatPress}
+          >
             <Icon
               name="chatbubble-outline"
               size={moderateScale(20)}
               color={theme.colors.onPrimary}
             />
-            <Text style={themed(styles.primaryButtonText)}>{t('caseDetail.contactLawyer')}</Text>
-          </Pressable>
-
-          <Pressable style={themed(styles.secondaryButton)}>
-            <Icon
-              name="document-text-outline"
-              size={moderateScale(20)}
-              color={theme.colors.primary}
-            />
-            <Text style={themed(styles.secondaryButtonText)}>
-              {t('caseDetail.viewDocuments')}
+            <Text style={themed(styles.primaryButtonText)}>
+              {t('caseDetail.contactLawyer')}
             </Text>
           </Pressable>
         </View>
       </ScrollView>
+      <AddNoteModal
+        isAddNoteModalVisible={isAddNoteModalVisible}
+        setIsAddNoteModalVisible={setIsAddNoteModalVisible}
+        caseId={caseId}
+        onSuccess={refetchCase}
+      />
+      <AddFileModal
+        isVisible={isAddFileModalVisible}
+        setIsVisible={setIsAddFileModalVisible}
+        caseId={caseId}
+        onSuccess={refetchCase}
+      />
     </SafeAreaView>
   );
 };

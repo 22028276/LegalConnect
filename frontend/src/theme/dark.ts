@@ -13,8 +13,8 @@ export const colors = {
       textColor: '#B4C5FF', // primary
     },
     pending: {
-      badgeColor: '#414659', // secondaryContainer
-      textColor: '#C1C5DD', // secondary
+      badgeColor: '#D97706', // secondaryContainer
+      textColor: '#FEF3C7', // secondary
     },
     rejected: {
       badgeColor: '#93000A', // errorContainer

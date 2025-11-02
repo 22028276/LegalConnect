@@ -40,9 +40,10 @@ export const profileImage: ThemedStyle<ImageStyle> = ({ spacing }) => ({
   marginTop: scale(spacing.xxs),
 });
 
-export const titleSection: ThemedStyle<ViewStyle> = () => ({
+export const titleSection: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   flex: 1,
   justifyContent: 'center',
+  marginLeft: scale(spacing.sm),
 });
 
 export const titleText: ThemedStyle<TextStyle> = ({
@@ -72,6 +73,16 @@ export const activityText: ThemedStyle<TextStyle> = ({
 }) => ({
   fontSize: moderateScale(fontSizes.sm),
   color: colors.onSurfaceVariant,
+});
+
+export const labelText: ThemedStyle<TextStyle> = ({ colors, fontSizes }) => ({
+  fontSize: moderateScale(fontSizes.sm),
+  color: colors.onSurface,
+  fontWeight: '600',
+});
+
+export const detailsSection: ThemedStyle<ViewStyle> = ({ spacing }) => ({
+  marginBottom: verticalScale(spacing.xs),
 });
 
 export const statusBadge: ThemedStyle<ViewStyle> = ({ spacing, colors }) => ({
@@ -173,6 +184,8 @@ export default {
   titleText,
   lawyerText,
   activityText,
+  labelText,
+  detailsSection,
   statusBadge,
   statusText,
   currentTaskText,

@@ -535,6 +535,7 @@ async def list_lawyer_profiles(db: SessionDep,
     records = result.all()
 
     profiles: list[LawyerProfileResponse] = []
+    updated = False
     for profile, user in records:
         if _sync_profile_display_name(profile, user):
             updated = True

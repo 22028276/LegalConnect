@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
   ActivityIndicator,
@@ -16,6 +16,7 @@ import * as styles from './styles';
 import ControllerForm from '../../../components/common/controllerForm';
 import Header from '../../../components/layout/header';
 import { useTranslation } from 'react-i18next';
+import { forgotPassword } from '../../../services/auth';
 
 type FormForgot = { email: string };
 
@@ -24,14 +25,25 @@ export default function ForgotPasswordScreen() {
   const { themed, theme } = useAppTheme();
   const { t } = useTranslation();
   const control = useForm<FormForgot>({ defaultValues: { email: '' } });
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     handleSubmit,
     formState: { errors },
   } = control;
 
-  const handleReset = (_: FormForgot) => {
-    navigation.navigate('VerifyCode');
+  const handleReset = async (data: FormForgot) => {
+    setIsLoading(true);
+    try {
+      await forgotPassword(data.email);
+      // Success toast shown in service layer
+      // User will receive token via email, then manually enter it in ResetPassword screen
+      navigation.navigate('ResetPassword');
+    } catch (error) {
+      console.error('Forgot password error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const fields = [
@@ -44,7 +56,10 @@ export default function ForgotPasswordScreen() {
       icon: 'mail-outline',
       error: errors?.email?.message,
       rules: {
-        required: { value: true, message: t('auth.forgotPassword.emailRequired') },
+        required: {
+          value: true,
+          message: t('auth.forgotPassword.emailRequired'),
+        },
         pattern: {
           value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, // simple email regex
           message: t('auth.forgotPassword.emailInvalid'),
@@ -74,11 +89,15 @@ export default function ForgotPasswordScreen() {
           <TouchableOpacity
             style={themed(styles.primaryButton)}
             onPress={handleSubmit(handleReset)}
-            disabled={!!errors.email}
+            disabled={!!errors.email || isLoading}
           >
-            <Text style={themed(styles.primaryButtonText)}>
-              {t('auth.forgotPassword.resetPassword')}
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator color={theme.colors.onPrimary} />
+            ) : (
+              <Text style={themed(styles.primaryButtonText)}>
+                {t('auth.forgotPassword.resetPassword')}
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>

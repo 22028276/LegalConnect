@@ -207,6 +207,17 @@ export const emptyText: ThemedStyle<TextStyle> = ({
   marginTop: verticalScale(spacing.md),
 });
 
+export const headerContainer: ThemedStyle<ViewStyle> = () => ({
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+});
+
 export const clearButton: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   padding: moderateScale(spacing.xs),
+});
+
+export const clearButtonAbsolute: ThemedStyle<ViewStyle> = () => ({
+  position: 'absolute',
+  right: 16,
 });

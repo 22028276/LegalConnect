@@ -1,4 +1,5 @@
-export type CaseStatus = 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+export type CaseStatus = 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'PENDING';
+export type BookingRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export interface Case {
   id: string;
@@ -17,8 +18,23 @@ export interface Case {
   updated_at: string;
 }
 
+export interface BookingRequest {
+  id: string;
+  client_id: string;
+  lawyer_id: string;
+  title: string;
+  short_description: string;
+  desired_start_time: string;
+  desired_end_time: string;
+  status: BookingRequestStatus;
+  decision_at: string | null;
+  create_at: string;
+  updated_at: string;
+}
+
 export interface CaseState {
   cases: Case[];
+  pendingCase: BookingRequest[];
   isLoading: boolean;
   error: string | null;
   currentCase: Case | null;

@@ -17,6 +17,7 @@ dependencies = [
     "pydantic-settings>=2.10.1",
     "pyotp>=2.9.0",
     "pytest>=8.4.2",
+    "resend>=2.0.0",
     "pytest-asyncio>=1.2.0",
     "python-jose[cryptography]>=3.5.0",
     "scikit-learn>=1.7.2",
