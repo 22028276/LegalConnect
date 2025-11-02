@@ -1,6 +1,6 @@
 from datetime import datetime
 from uuid import UUID
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from src.lawyer.constants import (
     LawyerVerificationStatus,
@@ -11,6 +11,7 @@ from src.lawyer.constants import (
     MAX_WEBSITE_LENGTH,
     MAX_REVOCATION_REASON_LENGTH,
 )
+from src.user.constants import MAX_AVATAR_URL_LENGTH, MAX_USER_ADDRESS_LENGTH
 from src.user.schemas import UserResponse
 
 
@@ -58,11 +59,6 @@ class LawyerProfileResponse(BaseModel):
 
 
 class LawyerProfileUpdatePayload(BaseModel):
-    display_name: str | None = Field(
-        default=None,
-        min_length=1,
-        max_length=MAX_DISPLAY_NAME_LENGTH,
-    )
     phone_number: str | None = Field(
         default=None,
         min_length=1,
@@ -84,7 +80,20 @@ class LawyerProfileUpdatePayload(BaseModel):
         min_length=1,
         max_length=MAX_EDUCATION_LENGTH,
     )
+    address: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=MAX_USER_ADDRESS_LENGTH,
+    )
+    avatar_url: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=MAX_AVATAR_URL_LENGTH,
+        alias="avatar",
+    )
 
+    model_config = ConfigDict(populate_by_name=True)
+    
     @field_validator("speaking_languages")
     @classmethod
     def validate_languages(
