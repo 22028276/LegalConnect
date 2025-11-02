@@ -98,3 +98,4 @@ class LawyerRating(Base):
         nullable=False,
     )
     stars: Mapped[int] = mapped_column(Integer, nullable=False)
+    detailed_review: Mapped[str | None] = mapped_column(Text, nullable=True)

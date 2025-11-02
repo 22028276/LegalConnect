@@ -610,11 +610,17 @@ async def rate_case(
     if existing_rating.scalar_one_or_none():
         raise RatingAlreadySubmitted()
 
+    detailed_review = None
+    if payload.detailed_review is not None:
+        stripped_review = payload.detailed_review.strip()
+        detailed_review = stripped_review or None
+
     rating = LawyerRating(
         case_history_id=case.id,
         lawyer_id=case.lawyer_id,
         client_id=case.client_id,
         stars=stars,
+        detailed_review=detailed_review,
     )
     db.add(rating)
     await db.commit()

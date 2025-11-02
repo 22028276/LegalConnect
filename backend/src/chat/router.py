@@ -53,6 +53,8 @@ from src.core.base_model import time_now
 from src.core.config import settings
 from src.core.database import SessionDep, SessionLocal
 from src.user.models import User
+from src.user.utils import resolve_avatar_url
+
 
 chat_route = APIRouter(
     tags=["Chat"],
@@ -75,14 +77,17 @@ async def chat_health() -> dict[str, object]:
     }
 
 
-def _serialize_participant(participant: ChatParticipant) -> ChatParticipantResponse:
+async def _serialize_participant(
+    participant: ChatParticipant,
+) -> ChatParticipantResponse:
+    avatar_url = await resolve_avatar_url(participant.user.avatar_url)
     return ChatParticipantResponse(
         conversation_id=participant.conversation_id,
         user=ChatUserSummary(
             id=participant.user.id,
             username=participant.user.username,
             email=participant.user.email,
-            avatar_url=participant.user.avatar_url,
+            avatar_url=avatar_url,
         ),
         joined_at=participant.create_at,
         last_read_at=participant.last_read_at,
@@ -129,7 +134,7 @@ async def _serialize_conversation(
         .order_by(ChatParticipant.create_at.asc())
     )
     participants = [
-        _serialize_participant(participant)
+        await _serialize_participant(participant)
         for participant in participants_result.scalars().all()
     ]
 
