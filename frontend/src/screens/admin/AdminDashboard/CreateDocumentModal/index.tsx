@@ -111,7 +111,9 @@ export default function CreateDocumentModal(props: CreateDocumentModalProps) {
       const message =
         err?.response?.data?.message ||
         err.message ||
-        `Error ${isEditMode ? 'updating' : 'uploading'} document`;
+        isEditMode
+          ? t('admin.errorUpdatingDocument')
+          : t('admin.errorUploadingDocument');
       showError(t('toast.uploadFailed'), message);
       setError(message);
     } finally {
@@ -155,7 +157,7 @@ export default function CreateDocumentModal(props: CreateDocumentModalProps) {
 
           {isEditMode && document?.file_url && !file && (
             <Text style={themed(styles.fieldLabel)}>
-              {t('admin.currentFile')}: {document.original_filename || 'Document.pdf'}
+              {t('admin.currentFile')}: {document.original_filename || t('admin.defaultDocumentName')}
             </Text>
           )}
 

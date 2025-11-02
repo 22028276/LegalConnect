@@ -23,12 +23,6 @@ export const statusBadge: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   marginBottom: scale(spacing.sm),
 });
 
-export const statusText: ThemedStyle<TextStyle> = ({ fontSizes }) => ({
-  fontSize: moderateScale(fontSizes.lg),
-  fontWeight: '700',
-  color: '#FFFFFF',
-});
-
 export const statusDate: ThemedStyle<TextStyle> = ({ colors, fontSizes }) => ({
   fontSize: moderateScale(fontSizes.sm),
   color: colors.onSurfaceVariant,
@@ -132,10 +126,10 @@ export const rejectButton: ThemedStyle<ViewStyle> = ({ colors }) => ({
   backgroundColor: colors.error,
 });
 
-export const buttonText: ThemedStyle<TextStyle> = ({ fontSizes }) => ({
+export const buttonText: ThemedStyle<TextStyle> = ({ fontSizes, colors }) => ({
   fontSize: moderateScale(fontSizes.lg),
   fontWeight: '700',
-  color: '#FFFFFF',
+  color: colors.inverseOnSurface,
 });
 
 export const loadingContainer: ThemedStyle<ViewStyle> = () => ({
@@ -210,6 +204,20 @@ export const imagePlaceholderText: ThemedStyle<TextStyle> = ({
   marginTop: scale(4),
 });
 
+export const pdfPreview: ThemedStyle<ViewStyle> = () => ({
+  width: '100%',
+  height: '100%',
+  justifyContent: 'center',
+  alignItems: 'center',
+  gap: scale(8),
+});
+
+export const pdfLabel: ThemedStyle<TextStyle> = ({ colors, fontSizes }) => ({
+  fontSize: moderateScale(fontSizes.sm),
+  color: colors.primary,
+  fontWeight: '600',
+});
+
 export const modalOverlay: ThemedStyle<ViewStyle> = () => ({
   flex: 1,
   backgroundColor: 'rgba(0, 0, 0, 0.9)',
@@ -238,11 +246,15 @@ export const closeButton: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   padding: scale(spacing.sm),
 });
 
-export const imageTitle: ThemedStyle<TextStyle> = ({ fontSizes, spacing }) => ({
+export const imageTitle: ThemedStyle<TextStyle> = ({
+  fontSizes,
+  spacing,
+  colors,
+}) => ({
   position: 'absolute',
   top: scale(spacing.xl),
   left: scale(spacing.xl),
-  color: '#FFFFFF',
+  color: colors.inverseOnSurface,
   fontSize: moderateScale(fontSizes.lg),
   fontWeight: '700',
   backgroundColor: 'rgba(0, 0, 0, 0.5)',

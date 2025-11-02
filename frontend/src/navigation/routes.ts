@@ -2,9 +2,7 @@ import SignInScreen from '../screens/auth/SignIn';
 import SignUpScreen from '../screens/auth/SignUp';
 import WelcomeScreen from '../screens/auth/WelcomeScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPassword';
-import VerifyCodeScreen from '../screens/auth/VerifyCode';
 import ResetSuccessScreen from '../screens/auth/ResetSuccess';
-import SetNewPasswordScreen from '../screens/auth/SetNewPassword';
 import CompleteProfileScreen from '../screens/auth/CompleteProfile';
 import HomeScreen from '../screens/main/Home';
 import CasesScreen from '../screens/main/Cases';
@@ -20,6 +18,8 @@ import PdfViewerScreen from '../components/common/PdfViewer';
 import ChatbotScreen from '../screens/main/Chatbot';
 import ScheduleScreen from '../screens/main/LawyerProfile/Schedule';
 import ScheduleManagementScreen from '../screens/main/ScheduleManagement';
+import LawyerRegistrationScreen from '../screens/main/LawyerRegistration';
+import ResetPasswordScreen from '../screens/auth/ResetPassword';
 
 export type StackScreenRoute = {
   name: string;
@@ -36,6 +36,7 @@ export const AuthStackNames = {
   ResetSuccess: 'ResetSuccess',
   SetNewPassword: 'SetNewPassword',
   CompleteProfile: 'CompleteProfile',
+  ResetPassword: 'ResetPassword',
 };
 
 export const MainStackNames = {
@@ -53,6 +54,7 @@ export const MainStackNames = {
   Chatbot: 'Chatbot',
   Schedule: 'Schedule',
   ScheduleManagement: 'ScheduleManagement',
+  LawyerRegistration: 'LawyerRegistration',
 };
 
 export const HomeTabsNames = {
@@ -83,24 +85,21 @@ export const AuthStackRoutes: StackScreenRoute[] = [
     component: ForgotPasswordScreen,
     options: { headerShown: false },
   },
-  {
-    name: AuthStackNames.VerifyCode,
-    component: VerifyCodeScreen,
-    options: { headerShown: false },
-  },
+
   {
     name: AuthStackNames.ResetSuccess,
     component: ResetSuccessScreen,
     options: { headerShown: false },
   },
-  {
-    name: AuthStackNames.SetNewPassword,
-    component: SetNewPasswordScreen,
-    options: { headerShown: false },
-  },
+
   {
     name: AuthStackNames.CompleteProfile,
     component: CompleteProfileScreen,
+    options: { headerShown: false },
+  },
+  {
+    name: AuthStackNames.ResetPassword,
+    component: ResetPasswordScreen,
     options: { headerShown: false },
   },
 ];
@@ -174,6 +173,11 @@ export const MainStackRoutes: StackScreenRoute[] = [
   {
     name: MainStackNames.ScheduleManagement,
     component: ScheduleManagementScreen,
+    options: { headerShown: false },
+  },
+  {
+    name: MainStackNames.LawyerRegistration,
+    component: LawyerRegistrationScreen,
     options: { headerShown: false },
   },
 ];

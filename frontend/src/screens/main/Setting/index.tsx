@@ -1,6 +1,11 @@
 import Header from '../../../components/layout/header';
 import { useAppDispatch, useAppSelector } from '../../../redux/hook';
-import { getUserInfo, selectUser, signOut } from '../../../stores/user.slice';
+import {
+  getUserInfo,
+  selectRole,
+  selectUser,
+  signOut,
+} from '../../../stores/user.slice';
 import Icon from '@react-native-vector-icons/ionicons'; // Or any other icon library
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useMemo } from 'react';
@@ -19,6 +24,7 @@ import { useAppTheme } from '../../../theme/theme.provider';
 import { MainStackNames } from '../../../navigation/routes';
 import i18n from 'i18next';
 import { t } from '../../../i18n';
+import { store } from '../../../redux/store';
 
 function TextChild({ text }: { text: string }) {
   const { themed, theme } = useAppTheme();
@@ -65,7 +71,6 @@ export default function SettingScreen() {
   const handleChangeLanguage = () => {
     const newLang = lang === 'en' ? 'vi' : 'en';
     if (newLang === i18n.language) return;
-    // Defer heavy language change work until after current animations/interactions
     InteractionManager.runAfterInteractions(() => {
       i18n.changeLanguage(newLang);
     });
@@ -84,6 +89,10 @@ export default function SettingScreen() {
 
   const handleEditProfile = () => {
     navigation.navigate(MainStackNames.CompleteProfile);
+  };
+
+  const handleBecomeLawyer = () => {
+    navigation.navigate(MainStackNames.LawyerRegistration);
   };
 
   const settingGroup = useMemo(
@@ -118,7 +127,7 @@ export default function SettingScreen() {
   );
 
   const accountGroup = [
-    ...(user?.role === 'lawyer'
+    ...(selectRole(store.getState()) === 'lawyer'
       ? [
           {
             Father: TouchableOpacity,
@@ -127,6 +136,17 @@ export default function SettingScreen() {
             onPress: () => {
               navigation.navigate(MainStackNames.ScheduleManagement);
             },
+            hasArrow: true,
+          },
+        ]
+      : []),
+    ...(selectRole(store.getState()) === 'client'
+      ? [
+          {
+            Father: TouchableOpacity,
+            iconName: 'person-outline',
+            title: t('setting.becomeLawyer'),
+            onPress: handleBecomeLawyer,
             hasArrow: true,
           },
         ]

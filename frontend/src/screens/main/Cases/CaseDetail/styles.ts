@@ -48,13 +48,6 @@ export const sectionTitle = (theme: any): TextStyle => ({
   marginBottom: moderateScale(theme.spacing.md),
 });
 
-export const sectionHeader = (theme: any): ViewStyle => ({
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  justifyContent: 'space-between' as const,
-  marginBottom: moderateScale(theme.spacing.md),
-});
-
 export const descriptionText = (theme: any): TextStyle => ({
   fontSize: moderateScale(theme.fontSizes.md),
   color: theme.colors.onSurface,
@@ -158,98 +151,13 @@ export const secondaryButtonText = (theme: any): TextStyle => ({
   color: theme.colors.primary,
 });
 
-export const addNoteButton = (theme: any): ViewStyle => ({
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
+export const loadingContainer = (_theme: any): ViewStyle => ({
+  flex: 1,
   justifyContent: 'center' as const,
-  backgroundColor: theme.colors.surfaceVariant,
-  borderRadius: moderateScale(8),
-  padding: moderateScale(theme.spacing.md),
+  alignItems: 'center' as const,
+});
+
+export const headerActions = (theme: any): ViewStyle => ({
+  flexDirection: 'row' as const,
   gap: moderateScale(theme.spacing.sm),
-  borderWidth: 1,
-  borderColor: theme.colors.primary,
-  borderStyle: 'dashed' as const,
-});
-
-export const addNoteButtonText = (theme: any): TextStyle => ({
-  fontSize: moderateScale(theme.fontSizes.md),
-  color: theme.colors.primary,
-  fontWeight: '500' as const,
-});
-
-export const modalOverlay = (theme: any): ViewStyle => ({
-  flex: 1,
-  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  justifyContent: 'center' as const,
-  alignItems: 'center' as const,
-  padding: moderateScale(theme.spacing.md),
-});
-
-export const modalContent = (theme: any): ViewStyle => ({
-  backgroundColor: theme.colors.surface,
-  borderRadius: moderateScale(12),
-  padding: moderateScale(theme.spacing.lg),
-  width: '100%',
-  maxWidth: moderateScale(400),
-});
-
-export const modalHeader = (theme: any): ViewStyle => ({
-  flexDirection: 'row' as const,
-  alignItems: 'center' as const,
-  justifyContent: 'space-between' as const,
-  marginBottom: moderateScale(theme.spacing.lg),
-});
-
-export const modalTitle = (theme: any): TextStyle => ({
-  fontSize: moderateScale(theme.fontSizes.xl),
-  fontWeight: 'bold' as const,
-  color: theme.colors.onSurface,
-});
-
-export const modalTextInput = (theme: any): TextStyle => ({
-  borderWidth: 1,
-  borderColor: theme.colors.outline,
-  borderRadius: moderateScale(8),
-  padding: moderateScale(theme.spacing.md),
-  fontSize: moderateScale(theme.fontSizes.md),
-  color: theme.colors.onSurface,
-  backgroundColor: theme.colors.background,
-  minHeight: moderateScale(120),
-  textAlignVertical: 'top' as const,
-  marginBottom: moderateScale(theme.spacing.lg),
-});
-
-export const modalButtons = (theme: any): ViewStyle => ({
-  flexDirection: 'row' as const,
-  gap: moderateScale(theme.spacing.md),
-});
-
-export const modalCancelButton = (theme: any): ViewStyle => ({
-  flex: 1,
-  backgroundColor: 'transparent',
-  borderRadius: moderateScale(8),
-  paddingVertical: moderateScale(theme.spacing.md),
-  alignItems: 'center' as const,
-  borderWidth: 1,
-  borderColor: theme.colors.outline,
-});
-
-export const modalCancelButtonText = (theme: any): TextStyle => ({
-  fontSize: moderateScale(theme.fontSizes.md),
-  fontWeight: '600' as const,
-  color: theme.colors.onSurface,
-});
-
-export const modalSaveButton = (theme: any): ViewStyle => ({
-  flex: 1,
-  backgroundColor: theme.colors.primary,
-  borderRadius: moderateScale(8),
-  paddingVertical: moderateScale(theme.spacing.md),
-  alignItems: 'center' as const,
-});
-
-export const modalSaveButtonText = (theme: any): TextStyle => ({
-  fontSize: moderateScale(theme.fontSizes.md),
-  fontWeight: '600' as const,
-  color: theme.colors.onPrimary,
 });

@@ -1,12 +1,22 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FlatList, Text, TouchableOpacity, View } from 'react-native';
+import {
+  FlatList,
+  RefreshControl,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useAppTheme } from '../../../theme/theme.provider';
 import Header from '../../../components/layout/header';
 import * as styles from './styles';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
+import {
+  NavigationProp,
+  useFocusEffect,
+  useNavigation,
+} from '@react-navigation/native';
 import { MainStackNames } from '../../../navigation/routes';
-import { Case, BookingRequest } from '../../../types/case';
+import { Case, BookingRequest, CaseStatus } from '../../../types/case';
 // import { verticalScale } from 'react-native-size-matters';
 import CaseCard from '../../../components/common/caseCard';
 import { useTranslation } from 'react-i18next';
@@ -30,11 +40,6 @@ export default function CasesScreen() {
   const pendingCases = useAppSelector(selectPendingCases);
   const cases = useAppSelector(selectCases);
 
-  // Helper function to check if item is BookingRequest
-  const isBookingRequest = (item: DisplayItem): item is BookingRequest => {
-    return 'short_description' in item && 'status' in item;
-  };
-
   const tabs = useMemo(
     () => [
       { key: 'PENDING' as TabType, label: t('cases.pending') },
@@ -45,39 +50,37 @@ export default function CasesScreen() {
     [t],
   );
 
-  // Get data based on active tab
   const displayData = useMemo(() => {
     if (activeTab === 'PENDING') {
-      // Filter to show only PENDING booking requests, exclude ACCEPTED and DECLINED
-      return pendingCases.filter(item => {
-        if (isBookingRequest(item)) {
-          return item.status === 'PENDING';
-        }
-        return true; // Keep non-booking-request items (shouldn't happen in pending tab)
-      });
+      return pendingCases.filter(
+        pendingCase => pendingCase.status === 'PENDING',
+      );
     }
     return cases.filter(caseItem => caseItem.state === activeTab);
   }, [activeTab, pendingCases, cases]);
 
-  useEffect(() => {
+  const fetchData = () => {
     dispatch(fetchPendingCase());
     dispatch(fetchUserCases());
-  }, [dispatch]);
+  };
+  // Fetch data every time screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []),
+  );
 
-  // Refresh data when screen comes into focus
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      dispatch(fetchPendingCase());
-      dispatch(fetchUserCases());
-    });
-
-    return unsubscribe;
-  }, [navigation, dispatch]);
+  // Helper function to check if item is BookingRequest
+  const isBookingRequest = (item: DisplayItem): item is BookingRequest => {
+    return 'short_description' in item && 'status' in item;
+  };
 
   const renderCaseCard = ({ item }: { item: DisplayItem }) => {
+    const isPendingItem = isBookingRequest(item);
+
     // Convert BookingRequest to Case format for display in card
-    // Pass the original status for pending requests so it displays correctly
-    const caseData: Case = isBookingRequest(item)
+    const caseData: Case = isPendingItem
       ? {
           id: item.id,
           booking_request_id: item.id,
@@ -85,14 +88,10 @@ export default function CasesScreen() {
           client_id: item.client_id,
           title: item.title,
           description: item.short_description,
-          state: (item.status === 'PENDING' 
-            ? 'PENDING' 
-            : item.status === 'ACCEPTED' 
-            ? 'IN_PROGRESS' 
-            : 'CANCELLED') as Case['state'], // Map booking status to case state, including PENDING for display
+          state: item.status as CaseStatus,
           attachment_urls: [],
           lawyer_note: '',
-          client_note: `Status: ${item.status}`,
+          client_note: `${t('cases.statusPrefix')} ${item.status}`,
           started_at: item.desired_start_time,
           ending_time: item.desired_end_time,
           create_at: item.create_at,
@@ -104,8 +103,10 @@ export default function CasesScreen() {
       <CaseCard
         caseData={caseData}
         onPress={() =>
-          // Pass the original item (BookingRequest) so CaseDetail can detect it correctly
-          navigation.navigate(MainStackNames.CaseDetail, { caseData: item })
+          navigation.navigate(MainStackNames.CaseDetail, {
+            caseId: item.id,
+            isPending: isPendingItem,
+          })
         }
         stylesOverride={{
           cardContainer: () => ({
@@ -120,7 +121,9 @@ export default function CasesScreen() {
   const renderEmptyState = () => (
     <View style={themed(styles.content)}>
       <Text style={themed(styles.placeholderText)}>
-        {t('cases.noCasesFound', { status: t(`cases.${activeTab}`) })}
+        {t('cases.noCasesFound', {
+          status: t(`cases.${activeTab.toLowerCase()}`),
+        })}
       </Text>
     </View>
   );
@@ -148,6 +151,9 @@ export default function CasesScreen() {
         contentContainerStyle={themed(styles.listContainer)}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={renderEmptyState}
+        refreshControl={
+          <RefreshControl refreshing={false} onRefresh={fetchData} />
+        }
       />
     </SafeAreaView>
   );
