@@ -1,5 +1,9 @@
 from datetime import datetime
 from uuid import UUID
+import json
+from typing import Any
+
+from fastapi import Form
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from src.lawyer.constants import (
@@ -11,7 +15,10 @@ from src.lawyer.constants import (
     MAX_WEBSITE_LENGTH,
     MAX_REVOCATION_REASON_LENGTH,
 )
-from src.user.constants import MAX_AVATAR_URL_LENGTH, MAX_USER_ADDRESS_LENGTH
+from src.user.constants import MAX_USER_ADDRESS_LENGTH
+
+
+_FORM_UNSET = object()
 from src.user.schemas import UserResponse
 
 
@@ -46,6 +53,10 @@ class LawyerProfileResponse(BaseModel):
     user_id: UUID
     display_name: str
     email: EmailStr
+    avatar_url: str | None = Field(
+        default=None,
+        json_schema_extra={"format": "binary"},
+    )
     phone_number: str | None
     website_url: str | None
     office_address: str | None
@@ -85,14 +96,58 @@ class LawyerProfileUpdatePayload(BaseModel):
         min_length=1,
         max_length=MAX_USER_ADDRESS_LENGTH,
     )
-    avatar_url: str | None = Field(
-        default=None,
-        min_length=1,
-        max_length=MAX_AVATAR_URL_LENGTH,
-        alias="avatar",
-    )
 
     model_config = ConfigDict(populate_by_name=True)
+    
+    @classmethod
+    def as_form(
+        cls,
+        phone_number: str | None = Form(default=_FORM_UNSET),
+        website_url: str | None = Form(default=_FORM_UNSET),
+        office_address: str | None = Form(default=_FORM_UNSET),
+        speaking_languages: list[str] | None = Form(default=_FORM_UNSET),
+        education: str | None = Form(default=_FORM_UNSET),
+        address: str | None = Form(default=_FORM_UNSET),
+    ) -> "LawyerProfileUpdatePayload":
+        data: dict[str, Any] = {}
+
+        def _clean(value: Any) -> Any:
+            if isinstance(value, str):
+                stripped = value.strip()
+                if stripped == "":
+                    return None
+                if stripped.lower() == "null":
+                    return None
+                return value
+            return value
+
+        if phone_number is not _FORM_UNSET:
+            data["phone_number"] = _clean(phone_number)
+        if website_url is not _FORM_UNSET:
+            data["website_url"] = _clean(website_url)
+        if office_address is not _FORM_UNSET:
+            data["office_address"] = _clean(office_address)
+        if speaking_languages is not _FORM_UNSET:
+            if isinstance(speaking_languages, str):
+                try:
+                    parsed = json.loads(speaking_languages)
+                except json.JSONDecodeError:
+                    parsed = [speaking_languages]
+                else:
+                    if isinstance(parsed, list):
+                        data["speaking_languages"] = parsed
+                    elif parsed is None:
+                        data["speaking_languages"] = None
+                    else:
+                        data["speaking_languages"] = [str(parsed)]
+            else:
+                data["speaking_languages"] = speaking_languages
+        if education is not _FORM_UNSET:
+            data["education"] = _clean(education)
+        if address is not _FORM_UNSET:
+            data["address"] = _clean(address)
+
+        return cls(**data)
     
     @field_validator("speaking_languages")
     @classmethod

@@ -82,6 +82,7 @@ def _serialize_participant(participant: ChatParticipant) -> ChatParticipantRespo
             id=participant.user.id,
             username=participant.user.username,
             email=participant.user.email,
+            avatar_url=participant.user.avatar_url,
         ),
         joined_at=participant.create_at,
         last_read_at=participant.last_read_at,
