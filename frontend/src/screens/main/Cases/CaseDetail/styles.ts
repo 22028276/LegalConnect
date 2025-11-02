@@ -1,202 +1,240 @@
 import { moderateScale } from 'react-native-size-matters';
 import { TextStyle, ViewStyle } from 'react-native';
+import { ThemedStyle } from '../../../../theme';
 
-export const container = (theme: any): ViewStyle => ({
+export const container: ThemedStyle<ViewStyle> = ({ colors }) => ({
   flex: 1,
-  backgroundColor: theme.colors.background,
+  backgroundColor: colors.background,
 });
 
-export const scrollView = (_theme: any): ViewStyle => ({
+export const scrollView: ThemedStyle<ViewStyle> = ({}) => ({
   flex: 1,
 });
 
-export const scrollContent = (theme: any): ViewStyle => ({
-  paddingHorizontal: moderateScale(theme.spacing.md),
-  paddingBottom: moderateScale(theme.spacing.xl),
-  paddingTop: moderateScale(theme.spacing.md),
+export const scrollContent: ThemedStyle<ViewStyle> = ({ spacing }) => ({
+  paddingHorizontal: moderateScale(spacing.md),
+  paddingBottom: moderateScale(spacing.xl),
+  paddingTop: moderateScale(spacing.md),
 });
 
-export const statusBadge = (theme: any): ViewStyle => ({
+export const statusBadge: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   alignSelf: 'flex-start',
-  paddingHorizontal: moderateScale(theme.spacing.md),
-  paddingVertical: moderateScale(theme.spacing.xs),
+  paddingHorizontal: moderateScale(spacing.md),
+  paddingVertical: moderateScale(spacing.xs),
   borderRadius: moderateScale(20),
-  marginBottom: moderateScale(theme.spacing.md),
+  marginBottom: moderateScale(spacing.md),
 });
 
-export const statusText = (theme: any): TextStyle => ({
-  fontSize: moderateScale(theme.fontSizes.sm),
+export const statusText: ThemedStyle<TextStyle> = ({ fontSizes }) => ({
+  fontSize: moderateScale(fontSizes.sm),
   fontWeight: '600' as const,
 });
 
-export const caseTitle = (theme: any): TextStyle => ({
-  fontSize: moderateScale(theme.fontSizes.xxl),
+export const caseTitle: ThemedStyle<TextStyle> = ({
+  fontSizes,
+  spacing,
+  colors,
+}) => ({
+  fontSize: moderateScale(fontSizes.xxl),
   fontWeight: 'bold' as const,
-  color: theme.colors.onSurface,
-  marginBottom: moderateScale(theme.spacing.lg),
+  color: colors.onSurface,
+  marginBottom: moderateScale(spacing.lg),
   lineHeight: moderateScale(32),
 });
 
-export const section = (theme: any): ViewStyle => ({
-  marginBottom: moderateScale(theme.spacing.xl),
+export const section: ThemedStyle<ViewStyle> = ({ spacing }) => ({
+  marginBottom: moderateScale(spacing.xl),
 });
 
-export const sectionTitle = (theme: any): TextStyle => ({
-  fontSize: moderateScale(theme.fontSizes.lg),
+export const sectionTitle: ThemedStyle<TextStyle> = ({
+  fontSizes,
+  spacing,
+  colors,
+}) => ({
+  fontSize: moderateScale(fontSizes.lg),
   fontWeight: 'bold' as const,
-  color: theme.colors.onSurface,
-  marginBottom: moderateScale(theme.spacing.md),
+  color: colors.onSurface,
+  marginBottom: moderateScale(spacing.md),
 });
 
-export const descriptionText = (theme: any): TextStyle => ({
-  fontSize: moderateScale(theme.fontSizes.md),
-  color: theme.colors.onSurface,
+export const descriptionText: ThemedStyle<TextStyle> = ({
+  fontSizes,
+  colors,
+}) => ({
+  fontSize: moderateScale(fontSizes.md),
+  color: colors.onSurface,
   lineHeight: moderateScale(22),
 });
 
-export const infoRow = (theme: any): ViewStyle => ({
+export const infoRow: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
-  marginBottom: moderateScale(theme.spacing.md),
-  paddingVertical: moderateScale(theme.spacing.xs),
+  marginBottom: moderateScale(spacing.md),
+  paddingVertical: moderateScale(spacing.xs),
 });
 
-export const infoTextContainer = (theme: any): ViewStyle => ({
+export const infoTextContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   flex: 1,
-  marginLeft: moderateScale(theme.spacing.sm),
+  marginLeft: moderateScale(spacing.sm),
 });
 
-export const infoLabel = (theme: any): TextStyle => ({
-  fontSize: moderateScale(theme.fontSizes.sm),
-  color: theme.colors.onSurfaceVariant,
+export const infoLabel: ThemedStyle<TextStyle> = ({ fontSizes, colors }) => ({
+  fontSize: moderateScale(fontSizes.sm),
+  color: colors.onSurfaceVariant,
   marginBottom: moderateScale(2),
 });
 
-export const infoValue = (theme: any): TextStyle => ({
-  fontSize: moderateScale(theme.fontSizes.md),
-  color: theme.colors.onSurface,
+export const infoValue: ThemedStyle<TextStyle> = ({ fontSizes, colors }) => ({
+  fontSize: moderateScale(fontSizes.md),
+  color: colors.onSurface,
   fontWeight: '500' as const,
 });
 
-export const noteContainer = (theme: any): ViewStyle => ({
-  backgroundColor: theme.colors.surfaceVariant,
+export const noteContainer: ThemedStyle<ViewStyle> = ({ spacing, colors }) => ({
+  backgroundColor: colors.surfaceVariant,
   borderRadius: moderateScale(8),
-  padding: moderateScale(theme.spacing.md),
+  padding: moderateScale(spacing.md),
   borderLeftWidth: 3,
-  borderLeftColor: theme.colors.primary,
+  borderLeftColor: colors.primary,
 });
 
-export const noteText = (theme: any): TextStyle => ({
-  fontSize: moderateScale(theme.fontSizes.md),
-  color: theme.colors.onSurface,
+export const noteText: ThemedStyle<TextStyle> = ({ fontSizes, colors }) => ({
+  fontSize: moderateScale(fontSizes.md),
+  color: colors.onSurface,
   lineHeight: moderateScale(22),
 });
 
-export const attachmentItem = (theme: any): ViewStyle => ({
+export const attachmentItem: ThemedStyle<ViewStyle> = ({
+  spacing,
+  colors,
+}) => ({
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
-  backgroundColor: theme.colors.surface,
+  backgroundColor: colors.surface,
   borderRadius: moderateScale(8),
-  padding: moderateScale(theme.spacing.md),
-  marginBottom: moderateScale(theme.spacing.sm),
+  padding: moderateScale(spacing.md),
+  marginBottom: moderateScale(spacing.sm),
   borderWidth: 1,
-  borderColor: theme.colors.outline,
+  borderColor: colors.outline,
 });
 
-export const attachmentText = (theme: any): TextStyle => ({
+export const attachmentText: ThemedStyle<TextStyle> = ({
+  fontSizes,
+  colors,
+  spacing,
+}) => ({
   flex: 1,
-  fontSize: moderateScale(theme.fontSizes.md),
-  color: theme.colors.onSurface,
-  marginLeft: moderateScale(theme.spacing.sm),
+  fontSize: moderateScale(fontSizes.md),
+  color: colors.onSurface,
+  marginLeft: moderateScale(spacing.sm),
 });
 
-export const buttonContainer = (theme: any): ViewStyle => ({
-  marginTop: moderateScale(theme.spacing.lg),
-  gap: moderateScale(theme.spacing.md),
+export const buttonContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
+  marginTop: moderateScale(spacing.lg),
+  gap: moderateScale(spacing.md),
 });
 
-export const primaryButton = (theme: any): ViewStyle => ({
-  backgroundColor: theme.colors.primary,
+export const primaryButton: ThemedStyle<ViewStyle> = ({ spacing, colors }) => ({
+  backgroundColor: colors.primary,
   borderRadius: moderateScale(8),
-  paddingVertical: moderateScale(theme.spacing.md),
-  paddingHorizontal: moderateScale(theme.spacing.lg),
+  paddingVertical: moderateScale(spacing.md),
+  paddingHorizontal: moderateScale(spacing.lg),
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
-  gap: moderateScale(theme.spacing.sm),
+  gap: moderateScale(spacing.sm),
 });
 
-export const primaryButtonText = (theme: any): TextStyle => ({
-  fontSize: moderateScale(theme.fontSizes.md),
+export const primaryButtonText: ThemedStyle<TextStyle> = ({
+  fontSizes,
+  colors,
+}) => ({
+  fontSize: moderateScale(fontSizes.md),
   fontWeight: '600' as const,
-  color: theme.colors.onPrimary,
+  color: colors.onPrimary,
 });
 
-export const secondaryButton = (theme: any): ViewStyle => ({
+export const secondaryButton: ThemedStyle<ViewStyle> = ({
+  spacing,
+  colors,
+}) => ({
   backgroundColor: 'transparent',
   borderRadius: moderateScale(8),
-  paddingVertical: moderateScale(theme.spacing.md),
-  paddingHorizontal: moderateScale(theme.spacing.lg),
+  paddingVertical: moderateScale(spacing.md),
+  paddingHorizontal: moderateScale(spacing.lg),
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
-  gap: moderateScale(theme.spacing.sm),
+  gap: moderateScale(spacing.sm),
   borderWidth: 1,
-  borderColor: theme.colors.primary,
+  borderColor: colors.primary,
 });
 
-export const secondaryButtonText = (theme: any): TextStyle => ({
-  fontSize: moderateScale(theme.fontSizes.md),
+export const secondaryButtonText: ThemedStyle<TextStyle> = ({
+  fontSizes,
+  colors,
+}) => ({
+  fontSize: moderateScale(fontSizes.md),
   fontWeight: '600' as const,
-  color: theme.colors.primary,
+  color: colors.primary,
 });
 
-export const loadingContainer = (_theme: any): ViewStyle => ({
+export const loadingContainer: ThemedStyle<ViewStyle> = ({}) => ({
   flex: 1,
   justifyContent: 'center' as const,
   alignItems: 'center' as const,
 });
 
-export const headerActions = (theme: any): ViewStyle => ({
+export const headerActions: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   flexDirection: 'row' as const,
-  gap: moderateScale(theme.spacing.sm),
+  gap: moderateScale(spacing.sm),
 });
 
-export const completeButton = (theme: any): ViewStyle => ({
-  backgroundColor: theme.colors.processStatus?.approved || '#4CAF50',
+export const completeButton: ThemedStyle<ViewStyle> = ({
+  spacing,
+  colors,
+}) => ({
+  backgroundColor: colors.processStatus?.approved?.badgeColor || '#4CAF50',
   borderRadius: moderateScale(8),
-  paddingVertical: moderateScale(theme.spacing.md),
-  paddingHorizontal: moderateScale(theme.spacing.lg),
+  paddingVertical: moderateScale(spacing.md),
+  paddingHorizontal: moderateScale(spacing.lg),
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
-  gap: moderateScale(theme.spacing.sm),
+  gap: moderateScale(spacing.sm),
 });
 
-export const completeButtonText = (theme: any): TextStyle => ({
-  fontSize: moderateScale(theme.fontSizes.md),
+export const completeButtonText: ThemedStyle<TextStyle> = ({
+  fontSizes,
+  colors,
+}) => ({
+  fontSize: moderateScale(fontSizes.md),
   fontWeight: '600' as const,
-  color: theme.colors.onPrimary,
+  color: colors.onPrimary,
 });
 
-export const cancelButton = (theme: any): ViewStyle => ({
+export const cancelButton: ThemedStyle<ViewStyle> = ({ spacing, colors }) => ({
   backgroundColor: 'transparent',
   borderRadius: moderateScale(8),
-  paddingVertical: moderateScale(theme.spacing.md),
-  paddingHorizontal: moderateScale(theme.spacing.lg),
+  paddingVertical: moderateScale(spacing.md),
+  paddingHorizontal: moderateScale(spacing.lg),
   flexDirection: 'row' as const,
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
-  gap: moderateScale(theme.spacing.sm),
+  gap: moderateScale(spacing.sm),
   borderWidth: 1,
-  borderColor: theme.colors.error,
+  borderColor: colors.error,
 });
 
-export const cancelButtonText = (theme: any): TextStyle => ({
-  fontSize: moderateScale(theme.fontSizes.md),
+export const cancelButtonText: ThemedStyle<TextStyle> = ({
+  fontSizes,
+  colors,
+}) => ({
+  fontSize: moderateScale(fontSizes.md),
   fontWeight: '600' as const,
+  color: colors.error,
 });
 
-export const buttonDisabled = (theme: any): ViewStyle => ({
+export const buttonDisabled: ThemedStyle<ViewStyle> = ({}) => ({
   opacity: 0.6,
 });

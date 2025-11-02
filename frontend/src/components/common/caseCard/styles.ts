@@ -175,6 +175,27 @@ export const lastUpdatedText: ThemedStyle<TextStyle> = ({
   color: colors.onSurfaceVariant,
 });
 
+export const ratingButton: ThemedStyle<ViewStyle> = ({ spacing, colors }) => ({
+  marginTop: verticalScale(spacing.xs),
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: colors.surfaceVariant,
+  borderRadius: moderateScale(8),
+  paddingVertical: verticalScale(spacing.xs),
+  paddingHorizontal: moderateScale(spacing.md),
+  gap: moderateScale(spacing.xxxs),
+});
+
+export const ratingButtonText: ThemedStyle<TextStyle> = ({
+  colors,
+  fontSizes,
+}) => ({
+  fontSize: moderateScale(fontSizes.sm),
+  color: colors.primary,
+  fontWeight: '600',
+});
+
 export default {
   cardContainer,
   headerSection,
@@ -198,4 +219,6 @@ export default {
   commentsSection,
   commentsText,
   lastUpdatedText,
+  ratingButton,
+  ratingButtonText,
 };

@@ -24,6 +24,8 @@ import {
   selectIsLoading,
 } from '../../../stores/document.slice';
 import { useAppDispatch, useAppSelector } from '../../../redux/hook';
+import Input from '../../../components/common/input';
+import { Document } from '../../../types/document';
 
 // Separator component for document list
 const ItemSeparator = () => <View style={{ height: moderateScale(12) }} />;
@@ -31,7 +33,8 @@ const ItemSeparator = () => <View style={{ height: moderateScale(12) }} />;
 export default function DocumentsScreen() {
   const { themed, theme } = useAppTheme();
   const { t } = useTranslation();
-  const [selectedFilter, setSelectedFilter] = useState('All');
+  const [selectedFilter, setSelectedFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const documents = useAppSelector(selectDocuments);
   const isLoading = useAppSelector(selectIsLoading);
   const dispatch = useAppDispatch();
@@ -41,12 +44,48 @@ export default function DocumentsScreen() {
     await dispatch(fetchDocuments());
     console.log('documents: ', documents);
   };
+
   useEffect(() => {
     getDocuments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch]);
 
-  const renderDocumentItem = ({ item }: { item: any }) => (
+  const getFilteredDocuments = () => {
+    let filtered = [...documents];
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(
+        document =>
+          document.display_name?.toLowerCase().includes(query) ||
+          document.original_filename?.toLowerCase().includes(query),
+      );
+    }
+
+    // Apply sort filter
+    if (selectedFilter === 'newest') {
+      // Sort by created_at descending (newest first)
+      filtered.sort((a, b) => {
+        const dateA = a.create_at ? new Date(a.create_at).getTime() : 0;
+        const dateB = b.create_at ? new Date(b.create_at).getTime() : 0;
+        return dateB - dateA;
+      });
+    } else if (selectedFilter === 'oldest') {
+      // Sort by created_at ascending (oldest first)
+      filtered.sort((a, b) => {
+        const dateA = a.create_at ? new Date(a.create_at).getTime() : 0;
+        const dateB = b.create_at ? new Date(b.create_at).getTime() : 0;
+        return dateA - dateB;
+      });
+    }
+
+    return filtered;
+  };
+
+  const filteredDocuments = getFilteredDocuments();
+
+  const renderDocumentItem = ({ item }: { item: Document }) => (
     <TouchableOpacity
       style={themed(styles.documentCard)}
       onPress={() =>
@@ -66,7 +105,7 @@ export default function DocumentsScreen() {
       <View style={themed(styles.documentInfo)}>
         <Text style={themed(styles.documentName)}>{item.display_name}</Text>
         <Text style={themed(styles.documentTime)}>
-          {formatDate(item.created_at)}
+          {formatDate(item.create_at)}
         </Text>
       </View>
     </TouchableOpacity>
@@ -98,24 +137,50 @@ export default function DocumentsScreen() {
     <SafeAreaView style={themed(styles.container)} edges={['top', 'bottom']}>
       <StatusBar barStyle="light-content" backgroundColor="#1a1a2e" />
       <Header title={t('documents.title')} showBackButton={false} />
+
+      {/* Search Input */}
+      <View style={themed(styles.searchContainer)}>
+        <Input
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder={t('documents.searchPlaceholder')}
+          icon="search"
+          styles={{
+            container: themed(styles.searchInputContainer),
+            inputWrapper: themed(styles.searchInputWrapper),
+          }}
+        />
+      </View>
+
+      {/* Filter Tabs */}
       <View style={themed(styles.filterContainer)}>
         <RadioGroup
           options={[
-            { label: t('documents.all'), value: 'All' },
-            { label: 'DocType 1', value: 'DocType 1' },
-            { label: 'DocType 2', value: 'DocType 2' },
+            { label: t('common.all'), value: 'all' },
+            { label: t('home.newest'), value: 'newest' },
+            { label: t('documents.oldest'), value: 'oldest' },
           ]}
           selected={selectedFilter}
           onChange={setSelectedFilter}
         />
       </View>
 
+      {/* Documents List */}
       <FlatList
-        data={documents}
+        data={filteredDocuments}
         renderItem={renderDocumentItem}
         keyExtractor={item => item.id}
         contentContainerStyle={themed(styles.scrollContent)}
         ItemSeparatorComponent={ItemSeparator}
+        ListEmptyComponent={
+          <View style={themed(styles.emptyContainer)}>
+            <Text style={themed(styles.emptyText)}>
+              {searchQuery.trim()
+                ? t('documents.noDocumentsFound')
+                : t('documents.noDocuments')}
+            </Text>
+          </View>
+        }
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={getDocuments} />
         }

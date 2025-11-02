@@ -21,6 +21,23 @@ export const getPopularLawyers = async () => {
   }
 };
 
+export const getAllLawyers = async () => {
+  try {
+    const response = await axios.get('/lawyer/profile');
+    return response.data;
+  } catch (error: any) {
+    const data = error?.response?.data;
+    const message =
+      data?.message ||
+      data?.detail ||
+      data?.error ||
+      error?.message ||
+      'Fetch lawyers failed';
+    showError(t('toast.loadLawyersFailed'), message);
+    throw new Error(message);
+  }
+};
+
 export const getLawyerById = async (id: string) => {
   try {
     const response = await axios.get(`/lawyer/profile/${id}`);
@@ -74,7 +91,7 @@ export const getLawyerByPage = async (page: number) => {
 
 export const getLawyerRatings = async (lawyerId: string) => {
   try {
-    const response = await axios.get(`/lawyer/profile/${lawyerId}/ratings`);
+    const response = await axios.get(`/booking/lawyers/${lawyerId}/ratings`);
     return response.data;
   } catch (error: any) {
     const data = error?.response?.data;

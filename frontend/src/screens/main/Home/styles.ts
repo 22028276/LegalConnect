@@ -1,4 +1,8 @@
-import { moderateScale, verticalScale } from 'react-native-size-matters';
+import {
+  ImageStyle,
+  moderateScale,
+  verticalScale,
+} from 'react-native-size-matters';
 import { ThemedStyle } from '../../../theme';
 
 export const container: ThemedStyle<any> = ({ colors }) => ({
@@ -102,15 +106,25 @@ export const searchInputWrapper: ThemedStyle<any> = ({ colors }) => ({
   borderWidth: 1,
 });
 
-export const profileButton: ThemedStyle<any> = ({ colors }) => ({
+export const profileButton: ThemedStyle<any> = ({}) => ({
   width: moderateScale(44),
   height: moderateScale(44),
   borderRadius: moderateScale(22),
-  backgroundColor: colors.primary,
   justifyContent: 'center',
   alignItems: 'center',
 });
 
+export const profileImageContainer: ThemedStyle<any> = ({}) => ({
+  width: moderateScale(44),
+  height: moderateScale(44),
+  borderRadius: moderateScale(22),
+  overflow: 'hidden',
+});
+
+export const profileImage: ThemedStyle<ImageStyle> = ({}) => ({
+  width: '100%',
+  height: '100%',
+});
 export const noDataContainer: ThemedStyle<any> = ({ spacing }) => ({
   paddingTop: verticalScale(spacing.xl),
   paddingHorizontal: moderateScale(spacing.sm),

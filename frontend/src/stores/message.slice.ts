@@ -124,7 +124,7 @@ export const messageSlice = createSlice({
       } else {
         // Nếu conversation chưa có trong list (có thể là conversation mới),
         // tạo một conversation tạm thời với thông tin từ message
-        // Note: Điều này chỉ tạo một conversation cơ bản, 
+        // Note: Điều này chỉ tạo một conversation cơ bản,
         // có thể cần fetchConversations để lấy đầy đủ thông tin participants
         const tempConversation: any = {
           id: conversationId,

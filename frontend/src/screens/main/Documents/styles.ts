@@ -25,12 +25,23 @@ export const searchButton: ThemedStyle<any> = ({ spacing }) => ({
   padding: moderateScale(spacing.xs),
 });
 
+export const searchContainer: ThemedStyle<any> = ({ spacing }) => ({
+  paddingHorizontal: moderateScale(spacing.md),
+  paddingTop: verticalScale(spacing.sm),
+  paddingBottom: verticalScale(spacing.xs),
+});
+
+export const searchInputContainer: ThemedStyle<any> = () => ({
+  width: '100%',
+});
+
+export const searchInputWrapper: ThemedStyle<any> = () => ({
+  marginBottom: 0,
+});
+
 export const filterContainer: ThemedStyle<any> = ({ spacing }) => ({
-  flexDirection: 'row',
   paddingHorizontal: moderateScale(spacing.md),
   paddingVertical: verticalScale(spacing.sm),
-  alignItems: 'center',
-  gap: moderateScale(spacing.sm),
 });
 
 export const filterButton: ThemedStyle<any> = ({ spacing }) => ({
@@ -71,7 +82,7 @@ export const scrollView: ThemedStyle<any> = () => ({
 
 export const scrollContent: ThemedStyle<any> = ({ spacing }) => ({
   padding: moderateScale(spacing.md),
-  paddingBottom: verticalScale(spacing.xxl),
+  paddingBottom: verticalScale(spacing.xxxxxxxl),
 });
 
 export const documentSection: ThemedStyle<any> = ({ spacing }) => ({
@@ -123,4 +134,17 @@ export const documentName: ThemedStyle<any> = ({ colors, fontSizes }) => ({
 export const documentTime: ThemedStyle<any> = ({ colors, fontSizes }) => ({
   fontSize: moderateScale(fontSizes.sm),
   color: colors.onSurfaceVariant,
+});
+
+export const emptyContainer: ThemedStyle<any> = ({ spacing }) => ({
+  flex: 1,
+  justifyContent: 'center',
+  alignItems: 'center',
+  paddingVertical: verticalScale(spacing.xxl),
+});
+
+export const emptyText: ThemedStyle<any> = ({ colors, fontSizes }) => ({
+  fontSize: moderateScale(fontSizes.md),
+  color: colors.onSurfaceVariant,
+  textAlign: 'center',
 });

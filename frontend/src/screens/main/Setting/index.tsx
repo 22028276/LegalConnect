@@ -85,8 +85,6 @@ export default function SettingScreen() {
     dispatch(signOut());
   };
 
-  // --- Dummy data for user profile ---
-
   const handleEditProfile = () => {
     navigation.navigate(MainStackNames.CompleteProfile);
   };
@@ -191,11 +189,20 @@ export default function SettingScreen() {
         contentContainerStyle={{ paddingBottom: verticalScale(80) }}
       >
         <View style={themed(styles.profileSection)}>
-          {user?.avatar ? (
-            <Image
-              source={{ uri: user?.avatar }}
-              style={themed(styles.avatar)}
-            />
+          {user?.avatar && user.avatar.trim() !== '' ? (
+            <View style={themed(styles.avatarContainer)}>
+              <Image
+                source={{ uri: user.avatar }}
+                style={themed(styles.avatar)}
+                resizeMode="cover"
+                onError={e => {
+                  console.log('Avatar image error:', e);
+                }}
+                onLoad={() => {
+                  console.log('Avatar loaded successfully:', user.avatar);
+                }}
+              />
+            </View>
           ) : (
             <Icon
               name={'person-circle-outline'}

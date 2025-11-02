@@ -20,6 +20,7 @@ import ScheduleScreen from '../screens/main/LawyerProfile/Schedule';
 import ScheduleManagementScreen from '../screens/main/ScheduleManagement';
 import LawyerRegistrationScreen from '../screens/main/LawyerRegistration';
 import ResetPasswordScreen from '../screens/auth/ResetPassword';
+import AllLawyersScreen from '../screens/main/AllLawyers';
 
 export type StackScreenRoute = {
   name: string;
@@ -55,6 +56,7 @@ export const MainStackNames = {
   Schedule: 'Schedule',
   ScheduleManagement: 'ScheduleManagement',
   LawyerRegistration: 'LawyerRegistration',
+  AllLawyers: 'AllLawyers',
 };
 
 export const HomeTabsNames = {
@@ -178,6 +180,11 @@ export const MainStackRoutes: StackScreenRoute[] = [
   {
     name: MainStackNames.LawyerRegistration,
     component: LawyerRegistrationScreen,
+    options: { headerShown: false },
+  },
+  {
+    name: MainStackNames.AllLawyers,
+    component: AllLawyersScreen,
     options: { headerShown: false },
   },
 ];

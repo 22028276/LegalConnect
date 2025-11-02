@@ -6,6 +6,8 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
+  Image,
+  ImageStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LawyerCard from '../../../components/common/lawyerCard';
@@ -33,6 +35,7 @@ import { useTranslation } from 'react-i18next';
 import { fetchUserCases, selectCases } from '../../../stores/case.slice';
 import { Case } from '../../../types/case';
 import { Document } from '../../../types/document';
+import { selectUser } from '../../../stores/user.slice';
 
 // Separator component for horizontal list
 const ItemSeparator = () => <View style={{ width: moderateScale(12) }} />;
@@ -45,19 +48,56 @@ export default function HomeScreen() {
   const dispatch = useAppDispatch();
   const documentsData = useAppSelector(selectDocuments);
   const lawyersData = useAppSelector(selectLawyers);
-  const casesData = useAppSelector(selectCases);
+  const cases = useAppSelector(selectCases);
+  const casesData = cases.filter(caseItem => caseItem.state === 'IN_PROGRESS');
   const { t } = useTranslation();
   useEffect(() => {
     dispatch(fetchPopularDocuments());
     dispatch(fetchPopularLawyers());
     dispatch(fetchUserCases());
   }, [dispatch]);
-
+  const user = useAppSelector(selectUser);
   const refetchData = () => {
     dispatch(fetchPopularDocuments());
     dispatch(fetchPopularLawyers());
     dispatch(fetchUserCases());
   };
+
+  const getFilteredLawyers = () => {
+    let filtered = [...lawyersData];
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(
+        lawyer =>
+          lawyer.display_name?.toLowerCase().includes(query) ||
+          lawyer.education?.toLowerCase().includes(query) ||
+          lawyer.office_address?.toLowerCase().includes(query),
+      );
+    }
+
+    // Apply sort filter
+    if (selectedFilter === 'featured') {
+      // Sort by rating descending
+      filtered.sort((a, b) => {
+        const ratingA = a.average_rating || 0;
+        const ratingB = b.average_rating || 0;
+        return ratingB - ratingA;
+      });
+    } else if (selectedFilter === 'new') {
+      // Sort by created_at descending (newest first)
+      filtered.sort((a, b) => {
+        const dateA = a.create_at ? new Date(a.create_at).getTime() : 0;
+        const dateB = b.create_at ? new Date(b.create_at).getTime() : 0;
+        return dateB - dateA;
+      });
+    }
+
+    return filtered;
+  };
+
+  const filteredLawyers = getFilteredLawyers();
 
   const handleProfilePress = () => {
     navigation.navigate(MainStackNames.Setting);
@@ -130,11 +170,27 @@ export default function HomeScreen() {
             onPress={handleProfilePress}
             style={themed(styles.profileButton)}
           >
-            <Icon
-              name="person"
-              size={moderateScale(theme.fontSizes.lg)}
-              color={theme.colors.surface}
-            />
+            {user?.avatar && user.avatar.trim() !== '' ? (
+              <View style={themed(styles.profileImageContainer)}>
+                <Image
+                  source={{ uri: user.avatar }}
+                  style={themed(styles.profileImage) as ImageStyle}
+                  resizeMode="cover"
+                  onError={e => {
+                    console.log('Avatar image error:', e);
+                  }}
+                  onLoad={() => {
+                    console.log('Avatar loaded successfully:', user.avatar);
+                  }}
+                />
+              </View>
+            ) : (
+              <Icon
+                name="person"
+                size={moderateScale(theme.fontSizes.lg)}
+                color={theme.colors.primary}
+              />
+            )}
           </TouchableOpacity>
         </View>
         <View style={themed(styles.listContainer)}>
@@ -142,9 +198,15 @@ export default function HomeScreen() {
             <Text style={themed(styles.sectionTitle)}>
               {t('home.featuredLawyers')}
             </Text>
-            <Text style={themed(styles.viewMoreText)}>
-              {t('home.viewMore')} {'>'}
-            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.navigate(MainStackNames.AllLawyers);
+              }}
+            >
+              <Text style={themed(styles.viewMoreText)}>
+                {t('home.viewMore')} {'>'}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <View style={themed(styles.filterContainer)}>
@@ -159,9 +221,9 @@ export default function HomeScreen() {
             />
           </View>
 
-          {lawyersData.length > 0 ? (
+          {filteredLawyers.length > 0 ? (
             <FlatList
-              data={lawyersData}
+              data={filteredLawyers}
               renderItem={renderLawyerCard}
               keyExtractor={(item, index) =>
                 item?.id !== undefined ? String(item.id) : `lawyer-${index}`

@@ -13,6 +13,9 @@ interface LawyerCardProps {
   currentLevel?: string;
   imageUrl?: string;
   onPress?: () => void;
+  stylesOverride?: {
+    cardContainer?: any;
+  };
 }
 
 export default function LawyerCard({
@@ -24,12 +27,16 @@ export default function LawyerCard({
   currentLevel,
   imageUrl,
   onPress,
+  stylesOverride,
 }: LawyerCardProps) {
   const { themed, theme } = useAppTheme();
 
   return (
     <TouchableOpacity
-      style={themed(styles.cardContainer)}
+      style={[
+        themed(styles.cardContainer),
+        stylesOverride?.cardContainer && themed(stylesOverride.cardContainer),
+      ]}
       onPress={onPress}
       activeOpacity={0.8}
     >

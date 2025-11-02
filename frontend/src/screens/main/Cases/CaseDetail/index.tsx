@@ -243,35 +243,31 @@ export const CaseDetail = () => {
     if (!displayCase || isDisplayPending) return;
 
     const caseItem = displayCase as Case;
-    Alert.alert(
-      t('caseDetail.cancelCase'),
-      t('caseDetail.cancelCaseConfirm'),
-      [
-        {
-          text: t('caseDetail.cancel'),
-          style: 'cancel',
+    Alert.alert(t('caseDetail.cancelCase'), t('caseDetail.cancelCaseConfirm'), [
+      {
+        text: t('caseDetail.cancel'),
+        style: 'cancel',
+      },
+      {
+        text: t('caseDetail.confirmCancel'),
+        style: 'destructive',
+        onPress: async () => {
+          setIsUpdatingState(true);
+          try {
+            await updateCaseState(caseId, {
+              title: caseItem.title,
+              description: caseItem.description,
+              state: 'CANCELLED',
+            });
+            refetchCase();
+          } catch (error) {
+            console.error('Failed to cancel case:', error);
+          } finally {
+            setIsUpdatingState(false);
+          }
         },
-        {
-          text: t('caseDetail.confirmCancel'),
-          style: 'destructive',
-          onPress: async () => {
-            setIsUpdatingState(true);
-            try {
-              await updateCaseState(caseId, {
-                title: caseItem.title,
-                description: caseItem.description,
-                state: 'CANCELLED',
-              });
-              refetchCase();
-            } catch (error) {
-              console.error('Failed to cancel case:', error);
-            } finally {
-              setIsUpdatingState(false);
-            }
-          },
-        },
-      ],
-    );
+      },
+    ]);
   };
 
   // Check if this is an incoming pending booking request for the lawyer
@@ -547,7 +543,6 @@ export const CaseDetail = () => {
 
         {/* Action Buttons */}
         <View style={themed(styles.buttonContainer)}>
-          {/* Accept/Decline buttons - Only for lawyers viewing incoming pending booking requests */}
           {isIncomingPendingRequest && (
             <>
               <TouchableOpacity
@@ -559,7 +554,10 @@ export const CaseDetail = () => {
                 disabled={isProcessingDecision}
               >
                 {isProcessingDecision ? (
-                  <ActivityIndicator size="small" color={theme.colors.onPrimary} />
+                  <ActivityIndicator
+                    size="small"
+                    color={theme.colors.onSurfaceVariant}
+                  />
                 ) : (
                   <>
                     <Icon
@@ -590,7 +588,12 @@ export const CaseDetail = () => {
                       size={moderateScale(20)}
                       color={theme.colors.error}
                     />
-                    <Text style={[themed(styles.cancelButtonText), { color: theme.colors.error }]}>
+                    <Text
+                      style={[
+                        themed(styles.cancelButtonText),
+                        { color: theme.colors.error },
+                      ]}
+                    >
                       {t('caseDetail.decline')}
                     </Text>
                   </>
@@ -604,66 +607,83 @@ export const CaseDetail = () => {
             !isDisplayPending &&
             (displayCase as Case).state === 'IN_PROGRESS' &&
             !isIncomingPendingRequest && (
-            <>
-              <TouchableOpacity
-                style={[themed(styles.completeButton), isUpdatingState && themed(styles.buttonDisabled)]}
-                onPress={handleCompleteCase}
-                disabled={isUpdatingState}
-              >
-                {isUpdatingState ? (
-                  <ActivityIndicator size="small" color={theme.colors.onPrimary} />
-                ) : (
-                  <>
-                    <Icon
-                      name="checkmark-circle-outline"
-                      size={moderateScale(20)}
-                      color={theme.colors.onPrimary}
+              <>
+                <TouchableOpacity
+                  style={[
+                    themed(styles.completeButton),
+                    isUpdatingState && themed(styles.buttonDisabled),
+                  ]}
+                  onPress={handleCompleteCase}
+                  disabled={isUpdatingState}
+                >
+                  {isUpdatingState ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={theme.colors.primary}
                     />
-                    <Text style={themed(styles.completeButtonText)}>
-                      {t('caseDetail.complete')}
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[themed(styles.cancelButton), isUpdatingState && themed(styles.buttonDisabled)]}
-                onPress={handleCancelCase}
-                disabled={isUpdatingState}
-              >
-                {isUpdatingState ? (
-                  <ActivityIndicator size="small" color={theme.colors.error} />
-                ) : (
-                  <>
-                    <Icon
-                      name="close-circle-outline"
-                      size={moderateScale(20)}
+                  ) : (
+                    <>
+                      <Icon
+                        name="checkmark-circle-outline"
+                        size={moderateScale(20)}
+                        color={theme.colors.primary}
+                      />
+                      <Text style={themed(styles.completeButtonText)}>
+                        {t('caseDetail.complete')}
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    themed(styles.cancelButton),
+                    isUpdatingState && themed(styles.buttonDisabled),
+                  ]}
+                  onPress={handleCancelCase}
+                  disabled={isUpdatingState}
+                >
+                  {isUpdatingState ? (
+                    <ActivityIndicator
+                      size="small"
                       color={theme.colors.error}
                     />
-                    <Text style={[themed(styles.cancelButtonText), { color: theme.colors.error }]}>
-                      {t('caseDetail.cancelCase')}
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </>
-           )}
+                  ) : (
+                    <>
+                      <Icon
+                        name="close-circle-outline"
+                        size={moderateScale(20)}
+                        color={theme.colors.error}
+                      />
+                      <Text
+                        style={[
+                          themed(styles.cancelButtonText),
+                          { color: theme.colors.error },
+                        ]}
+                      >
+                        {t('caseDetail.cancelCase')}
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </>
+            )}
 
           {/* Contact button - Show only when not showing Accept/Decline buttons */}
-          {!isIncomingPendingRequest && (
-            <Pressable
-              style={themed(styles.primaryButton)}
-              onPress={handleChatPress}
-            >
-              <Icon
-                name="chatbubble-outline"
-                size={moderateScale(20)}
-                color={theme.colors.onPrimary}
-              />
-              <Text style={themed(styles.primaryButtonText)}>
-                {isLawyer ? t('caseDetail.contactClient') : t('caseDetail.contactLawyer')}
-              </Text>
-            </Pressable>
-          )}
+          <Pressable
+            style={themed(styles.primaryButton)}
+            onPress={handleChatPress}
+          >
+            <Icon
+              name="chatbubble-outline"
+              size={moderateScale(20)}
+              color={theme.colors.onPrimary}
+            />
+            <Text style={themed(styles.primaryButtonText)}>
+              {isLawyer
+                ? t('caseDetail.contactClient')
+                : t('caseDetail.contactLawyer')}
+            </Text>
+          </Pressable>
         </View>
       </ScrollView>
       <AddNoteModal

@@ -10,7 +10,7 @@ export const colors = {
   processStatus: {
     approved: {
       badgeColor: '#0ca751',
-      textColor: '##ecfaf4', // onPrimaryContainer
+      textColor: '#ecfaf4', // onPrimaryContainer
     },
     pending: {
       badgeColor: '#FEF3C7',

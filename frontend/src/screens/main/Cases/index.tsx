@@ -27,12 +27,15 @@ import {
   selectCases,
   selectPendingCases,
 } from '../../../stores/case.slice';
+import { RatingModal } from './RatingModal';
 
 type TabType = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 type DisplayItem = Case | BookingRequest;
 
 export default function CasesScreen() {
   const [activeTab, setActiveTab] = useState<TabType>('PENDING');
+  const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
+  const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
   const { themed } = useAppTheme();
   const navigation = useNavigation<NavigationProp<any>>();
   const { t } = useTranslation();
@@ -76,6 +79,20 @@ export default function CasesScreen() {
     return 'short_description' in item && 'status' in item;
   };
 
+  const handleRatePress = (caseId: string) => {
+    setSelectedCaseId(caseId);
+    setIsRatingModalVisible(true);
+  };
+
+  const handleRatingModalClose = () => {
+    setIsRatingModalVisible(false);
+    setSelectedCaseId(null);
+  };
+
+  const handleRatingSuccess = () => {
+    fetchData();
+  };
+
   const renderCaseCard = ({ item }: { item: DisplayItem }) => {
     const isPendingItem = isBookingRequest(item);
 
@@ -107,6 +124,11 @@ export default function CasesScreen() {
             caseId: item.id,
             isPending: isPendingItem,
           })
+        }
+        onRatePress={
+          !isPendingItem && caseData.state === 'COMPLETED'
+            ? () => handleRatePress(item.id)
+            : undefined
         }
         stylesOverride={{
           cardContainer: () => ({
@@ -155,6 +177,14 @@ export default function CasesScreen() {
           <RefreshControl refreshing={false} onRefresh={fetchData} />
         }
       />
+      {selectedCaseId && (
+        <RatingModal
+          isVisible={isRatingModalVisible}
+          onClose={handleRatingModalClose}
+          caseId={selectedCaseId}
+          onSuccess={handleRatingSuccess}
+        />
+      )}
     </SafeAreaView>
   );
 }
