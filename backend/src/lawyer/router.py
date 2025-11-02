@@ -517,6 +517,7 @@ async def list_lawyer_profiles(db: SessionDep,
     records = result.all()
 
     profiles: list[LawyerProfileResponse] = []
+    updated = False
     for profile, user in records:
         profiles.append(await _build_profile_response(db, profile, user))
 
