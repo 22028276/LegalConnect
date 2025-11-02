@@ -4,8 +4,6 @@ from typing import Any
 from pathlib import Path
 from fastapi import APIRouter, Depends, Body, File, Form, UploadFile, Request
 from sqlalchemy.future import select
-from arq import create_pool
-from arq.connections import RedisSettings
 
 from src.core.database import SessionDep
 from src.core.config import settings
@@ -40,9 +38,9 @@ ALLOWED_AVATAR_EXTENSIONS = {".png", ".jpg"}
 
 from src.auth.services import (
     hash_password, 
-    create_reset_token, 
-    verify_reset_token
+    generate_reset_otp
 )
+from src.auth.exceptions import InvalidToken
 from src.auth.dependencies import get_current_user
 
 user_route = APIRouter (
@@ -215,7 +213,8 @@ async def update_user_role(user_id: uuid.UUID,
 #      FORGET PASSWORD ROUTE      #
 
 @user_route.post('/forget-password')
-async def forget_password(db: SessionDep,
+async def forget_password(request: Request,
+                          db: SessionDep,
                           payload: ForgetPasswordRequest):
     email_norm = payload.email.strip().lower()
     result = await db.execute(select(User).where(User.email == email_norm))
@@ -223,24 +222,50 @@ async def forget_password(db: SessionDep,
     if not user:
         raise UserNotFound()
     
-    redis = await create_pool(RedisSettings(host= settings.REDIS_HOST, port=settings.REDIS_PORT))
-    reset_token = create_reset_token(user.email)
-    await redis.enqueue_job("send_reset_email", user.email, reset_token)
+    # Tạo OTP 6 số
+    reset_otp = generate_reset_otp()
+    
+    # Lưu OTP vào Redis với expiry 5 phút (300 seconds)
+    redis_client = request.app.state.redis_client
+    redis_key = f"reset_otp:{email_norm}"
+    await redis_client.setex(redis_key, 300, reset_otp)
+    
+    # Gửi email với OTP qua ARQ worker
+    arq_pool = request.app.state.arq_pool
+    await arq_pool.enqueue_job("send_reset_email", user.email, reset_otp)
 
     return {"message": "Reset email sent"}
 
 
 @user_route.post('/reset-password', response_model=UserResponse)
-async def reset_password(db: SessionDep, 
-                         token: str, 
+async def reset_password(request: Request,
+                         db: SessionDep, 
+                         otp: str = Body(...),
+                         email: str = Body(...),
                          new_password: str = Body(...), 
                          confirm_password: str = Body(...)):
     if new_password != confirm_password:
         raise InvalidPasswordMatch()
     
-    email = verify_reset_token(token)
+    email_norm = email.strip().lower()
+    
+    # Verify OTP từ Redis
+    redis_client = request.app.state.redis_client
+    redis_key = f"reset_otp:{email_norm}"
+    stored_otp = await redis_client.get(redis_key)
+    
+    if not stored_otp:
+        raise InvalidToken()  # OTP đã expire hoặc không tồn tại
+    
+    # Verify OTP
+    if stored_otp != otp:
+        raise InvalidToken()  # OTP không đúng
+    
+    # OTP đúng - xóa OTP khỏi Redis (one-time use)
+    await redis_client.delete(redis_key)
 
-    result = await db.execute(select(User).where(User.email == email))
+    # Tìm user và reset password
+    result = await db.execute(select(User).where(User.email == email_norm))
     user = result.scalar_one_or_none()
     if not user:
         raise UserNotFound()
