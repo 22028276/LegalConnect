@@ -14,6 +14,7 @@ from src.core.config import settings
 AVATAR_ROOT_FOLDER = "user_avatars"
 DEFAULT_CONTENT_TYPE = "application/octet-stream"
 
+
 def build_avatar_key(user_id: UUID, original_filename: str | None) -> str:
     suffix = Path(original_filename or "").suffix.lower()
     sanitized_suffix = suffix if suffix in {".png", ".jpg"} else ""
