@@ -98,6 +98,7 @@ class CaseNotePayload(BaseModel):
 
 class RatingPayload(BaseModel):
     stars: int = Field(..., ge=1, le=5)
+    detailed_review: str | None = Field(default=None, max_length=MAX_NOTE_LENGTH)
 
 
 class RatingResponse(BaseModel):
@@ -106,5 +107,6 @@ class RatingResponse(BaseModel):
     lawyer_id: UUID
     client_id: UUID
     stars: int
+    detailed_review: str | None
     create_at: datetime
     updated_at: datetime

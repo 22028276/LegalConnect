@@ -8,6 +8,7 @@ from uuid import UUID
 
 from fastapi import (
     APIRouter,
+    Body,
     Depends,
     File,
     Form,
@@ -69,10 +70,11 @@ from src.user.constants import (
 )
 from src.user.models import User
 from src.user.schemas import UserResponse
+from src.user.serializers import serialize_user
 from src.user.exceptions import InvalidAvatarFile, AvatarUploadFailed
 from src.user.utils import (
     build_avatar_key,
-    build_avatar_url,
+    resolve_avatar_url,
     delete_avatar_from_s3,
     extract_key_from_avatar_url,
     upload_avatar_to_s3,
@@ -112,7 +114,11 @@ async def _generate_document_urls(request: LawyerVerificationRequest) -> dict[st
     return results
 
 
-def _build_summary_response(request: LawyerVerificationRequest, user: User) -> RequestSummaryResponse:
+async def _build_summary_response(
+    request: LawyerVerificationRequest, user: User
+) -> RequestSummaryResponse:
+
+    user_response = await serialize_user(user)
 
     return RequestSummaryResponse(
         id = request.id,
@@ -125,13 +131,15 @@ def _build_summary_response(request: LawyerVerificationRequest, user: User) -> R
         reviewed_at = request.reviewed_at,
         create_at = request.create_at,
         updated_at = request.updated_at,
-        user = UserResponse.model_validate(user),
+        user = user_response,
     )
 
 
-async def _build_detail_response(request: LawyerVerificationRequest, user: User) -> RequestDetailResponse:
+async def _build_detail_response(
+    request: LawyerVerificationRequest, user: User
+) -> RequestDetailResponse:
 
-    summary = _build_summary_response(request, user)
+    summary = await _build_summary_response(request, user)
     document_urls = await _generate_document_urls(request)
 
     return RequestDetailResponse(
@@ -190,7 +198,7 @@ async def _build_profile_response(db: SessionDep,
         user_id = profile.user_id,
         display_name = user.username,
         email = user.email,
-        avatar_url = user.avatar_url,
+        avatar_url = await resolve_avatar_url(user.avatar_url),
         phone_number = user.phone_number or profile.phone_number,
         website_url = profile.website_url,
         office_address = profile.office_address,
@@ -321,7 +329,10 @@ async def list_my_lawyer_verification_requests(db: SessionDep,
 
     requests = result.scalars().all()
 
-    return [_build_summary_response(request, current_user) for request in requests]
+    return [
+        await _build_summary_response(request, current_user)
+        for request in requests
+    ]
 
 
 @lawyer_route.get("/verification-requests", 
@@ -354,7 +365,7 @@ async def list_lawyer_verification_requests(db: SessionDep,
         raise RequestNotFound()
 
     return [
-        _build_summary_response(request, users[request.user_id])
+        await _build_summary_response(request, users[request.user_id])
         for request in requests
     ]
 
@@ -434,8 +445,8 @@ async def approve_lawyer_verification_request(request_id: UUID,
 @lawyer_route.patch("/verification-requests/{request_id}/reject",
                     response_model=RequestDetailResponse)
 async def reject_lawyer_verification_request(request_id: UUID,
-                                             payload: RequestRejectPayload,
                                              db: SessionDep,
+                                             payload: RequestRejectPayload | None = Body(default=None),
                                              current_user: User = Depends(get_current_user)
                                              ) -> RequestDetailResponse:
     
@@ -449,7 +460,8 @@ async def reject_lawyer_verification_request(request_id: UUID,
         raise RequestAlreadyReviewed()
 
     request.status = LawyerVerificationStatus.REJECTED.value
-    request.rejection_reason = payload.rejection_reason
+    rejection_reason = payload.rejection_reason if payload else None
+    request.rejection_reason = rejection_reason
     request.reviewed_by_admin_id = current_user.id
     request.reviewed_at = datetime.now(timezone.utc)
 
@@ -684,11 +696,10 @@ async def update_my_lawyer_profile(
 
     if avatar is not None:
         uploaded_key = await _store_avatar_and_get_key(user, avatar)
-        new_avatar_url = build_avatar_url(uploaded_key)
         previous_key = extract_key_from_avatar_url(user.avatar_url)
         if previous_key and previous_key != uploaded_key:
             await delete_avatar_from_s3(previous_key)
-        user.avatar_url = new_avatar_url
+        user.avatar_url = uploaded_key
 
     await db.commit()
     await db.refresh(profile)
