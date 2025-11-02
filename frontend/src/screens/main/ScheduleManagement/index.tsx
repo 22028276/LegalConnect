@@ -473,7 +473,7 @@ export default function ScheduleManagementScreen() {
                     style={themed(styles.textInput)}
                     value={startTime}
                     onChangeText={setStartTime}
-                    placeholder="09:00"
+                    placeholder={t('schedule.defaultStartTimePlaceholder')}
                     placeholderTextColor={theme.colors.onSurfaceVariant}
                     keyboardType="numeric"
                   />
@@ -497,7 +497,7 @@ export default function ScheduleManagementScreen() {
                     style={themed(styles.textInput)}
                     value={endTime}
                     onChangeText={setEndTime}
-                    placeholder="10:00"
+                    placeholder={t('schedule.defaultEndTimePlaceholder')}
                     placeholderTextColor={theme.colors.onSurfaceVariant}
                     keyboardType="numeric"
                   />

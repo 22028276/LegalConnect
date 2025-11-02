@@ -8,6 +8,7 @@ import envConfig from '../config/env';
 import { store } from '../redux/store';
 import { Alert } from 'react-native';
 import { userActions } from '../stores/user.slice';
+import { i18n } from '../i18n';
 
 let isRefreshToken = false;
 let requestsToRetry: any[] = [];
@@ -104,7 +105,10 @@ const setupAxiosInterceptors = () => {
               callback(null);
             });
             store.dispatch(userActions.isLoggedOut());
-            Alert.alert('sessionExpired');
+            Alert.alert(
+              i18n.t('common.sessionExpired'),
+              i18n.t('common.sessionExpiredMessage'),
+            );
             return Promise.reject(error);
           })
           .finally(() => {

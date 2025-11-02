@@ -103,7 +103,7 @@ function CustomTabBar(props: BottomTabBarProps & { insets: any }) {
             <TouchableOpacity
               key={route.key}
               accessibilityRole="button"
-              accessibilityLabel={getTabAccessibilityLabel(route.name)}
+              accessibilityLabel={getTabAccessibilityLabel(route.name, t)}
               onPress={onPress}
               style={themed($tabBarItem(isFocused))}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -197,16 +197,16 @@ function getTabLabel(routeName: string, t: any): string {
   }
 }
 
-function getTabAccessibilityLabel(routeName: string): string {
+function getTabAccessibilityLabel(routeName: string, t: any): string {
   switch (routeName) {
     case HomeTabsNames.Home:
-      return 'Navigate to Home screen';
+      return t('tabs.navigateToHome');
     case HomeTabsNames.Cases:
-      return 'Navigate to Works screen';
+      return t('tabs.navigateToWorks');
     case HomeTabsNames.Messages:
-      return 'Navigate to Messages screen';
+      return t('tabs.navigateToMessages');
     case HomeTabsNames.Documents:
-      return 'Navigate to Documents screen';
+      return t('tabs.navigateToDocuments');
     default:
       return `Navigate to ${routeName} screen`;
   }

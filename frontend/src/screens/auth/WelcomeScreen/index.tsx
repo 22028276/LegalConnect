@@ -25,7 +25,7 @@ export default function WelcomeScreen() {
       <View style={themed(styles.centerContent)}>
         <Image source={Logo} style={themed(styles.logo)} resizeMode="contain" />
 
-        <Text style={themed(styles.appName)}>{'LegalConnect'}</Text>
+        <Text style={themed(styles.appName)}>{t('common.appName')}</Text>
         <Text style={themed(styles.slogan)}>
           {t('welcomeScreen.slogan')}
         </Text>

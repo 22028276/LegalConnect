@@ -135,7 +135,7 @@ export default function CompleteProfileScreen({}) {
       name: 'dob',
       label: t('auth.completeProfile.dateOfBirth'),
       type: 'date',
-      placeholder: 'YYYY-MM-DD',
+      placeholder: t('common.dateFormatPlaceholder'),
       error: errors?.dob?.message,
       rules: {
         required: {
@@ -221,7 +221,7 @@ export default function CompleteProfileScreen({}) {
       name: 'dob',
       label: t('auth.completeProfile.dateOfBirth'),
       type: 'date',
-      placeholder: 'YYYY-MM-DD',
+      placeholder: t('common.dateFormatPlaceholder'),
       error: errors?.dob?.message,
       rules: {
         required: {
