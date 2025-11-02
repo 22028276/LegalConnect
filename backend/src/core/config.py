@@ -124,9 +124,11 @@ class Settings(BaseSettings):
     LEGAL_AI_DISCLAIMER: str = (
         "Câu trả lời do AI cung cấp chỉ mang tính tham khảo và không thay thế tư vấn pháp lý chuyên nghiệp."
     )
-    LEGAL_AI_DATASET_PATH: str = str(BASE_DIR / "backend" / "data" / "vi-law-qa-3161.csv")
+    # Dataset paths - tính từ config.py: src/core/config.py -> parents[2] = backend/
+    _BACKEND_DIR = Path(__file__).resolve().parents[2]
+    LEGAL_AI_DATASET_PATH: str = str(_BACKEND_DIR / "data" / "vi-law-qa-3161.csv")
     LEGAL_AI_GUIDANCE_DATASET_PATH: str | None = str(
-        Path(__file__).resolve().parents[2] / "data" / "app-guidance.csv"
+        _BACKEND_DIR / "data" / "app-guidance.csv"
     )
     LEGAL_AI_LOG_SAMPLE_RATE: float = 1.0
 
