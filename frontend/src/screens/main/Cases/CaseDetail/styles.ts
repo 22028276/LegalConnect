@@ -161,3 +161,42 @@ export const headerActions = (theme: any): ViewStyle => ({
   flexDirection: 'row' as const,
   gap: moderateScale(theme.spacing.sm),
 });
+
+export const completeButton = (theme: any): ViewStyle => ({
+  backgroundColor: theme.colors.processStatus?.approved?.badgeColor,
+  borderRadius: moderateScale(8),
+  paddingVertical: moderateScale(theme.spacing.md),
+  paddingHorizontal: moderateScale(theme.spacing.lg),
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+  gap: moderateScale(theme.spacing.sm),
+});
+
+export const completeButtonText = (theme: any): TextStyle => ({
+  fontSize: moderateScale(theme.fontSizes.md),
+  fontWeight: '600' as const,
+  color: theme.colors.onPrimary,
+});
+
+export const cancelButton = (theme: any): ViewStyle => ({
+  backgroundColor: 'transparent',
+  borderRadius: moderateScale(8),
+  paddingVertical: moderateScale(theme.spacing.md),
+  paddingHorizontal: moderateScale(theme.spacing.lg),
+  flexDirection: 'row' as const,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+  gap: moderateScale(theme.spacing.sm),
+  borderWidth: 1,
+  borderColor: theme.colors.error,
+});
+
+export const cancelButtonText = (theme: any): TextStyle => ({
+  fontSize: moderateScale(theme.fontSizes.md),
+  fontWeight: '600' as const,
+});
+
+export const buttonDisabled = (theme: any): ViewStyle => ({
+  opacity: 0.6,
+});

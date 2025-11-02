@@ -96,7 +96,7 @@ export const updateUserInfo = async (data: any) => {
 
     // Only include avatar_url if it's a string URL (not a file object)
     if (data.avatar_url && typeof data.avatar_url === 'object') {
-      body.avatar_url = data.avatar_url.uri;
+      body.avatar_url = data.avatar_url;
     }
 
     const response = await axios.put('/users/update', body, {
@@ -152,14 +152,17 @@ export const forgotPassword = async (email: string) => {
 };
 
 export const resetPassword = async (
-  token: string,
+  otp: string,
+  email: string,
   newPassword: string,
   confirmPassword: string,
 ) => {
   try {
     const response = await axios.post(
-      `/users/reset-password?token=${encodeURIComponent(token)}`,
+      `/users/reset-password`,
       {
+        otp: otp,
+        email: email,
         new_password: newPassword,
         confirm_password: confirmPassword,
       },

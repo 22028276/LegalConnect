@@ -20,7 +20,8 @@ import { resetPassword } from '../../../services/auth';
 import { AuthStackNames } from '../../../navigation/routes';
 
 type FormResetPassword = {
-  token: string;
+  otp: string;
+  email: string;
   newPassword: string;
   confirmPassword: string;
 };
@@ -30,7 +31,7 @@ export default function ResetPasswordScreen() {
   const { themed, theme } = useAppTheme();
   const { t } = useTranslation();
   const control = useForm<FormResetPassword>({
-    defaultValues: { token: '', newPassword: '', confirmPassword: '' },
+    defaultValues: { otp: '', email: '', newPassword: '', confirmPassword: '' },
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,7 +46,12 @@ export default function ResetPasswordScreen() {
   const handleReset = async (data: FormResetPassword) => {
     setIsLoading(true);
     try {
-      await resetPassword(data.token, data.newPassword, data.confirmPassword);
+      await resetPassword(
+        data.otp,
+        data.email,
+        data.newPassword,
+        data.confirmPassword,
+      );
       navigation.navigate(AuthStackNames.ResetSuccess);
     } catch (error) {
       console.error('Reset password error:', error);
@@ -56,16 +62,31 @@ export default function ResetPasswordScreen() {
 
   const fields = [
     {
-      id: 'token',
-      name: 'token',
-      label: t('auth.resetPassword.token'),
-      placeholder: t('auth.resetPassword.tokenPlaceholder'),
+      id: 'otp',
+      name: 'otp',
+      label: t('auth.resetPassword.otp'),
+      placeholder: t('auth.resetPassword.otpPlaceholder'),
       type: 'input',
-      error: errors?.token?.message,
+      keyboardType: 'numeric',
+      error: errors?.otp?.message,
       rules: {
         required: {
           value: true,
-          message: t('auth.resetPassword.tokenRequired'),
+          message: t('auth.resetPassword.otpRequired'),
+        },
+      },
+    },
+    {
+      id: 'email',
+      name: 'email',
+      label: t('auth.resetPassword.email'),
+      placeholder: t('auth.resetPassword.emailPlaceholder'),
+      type: 'input',
+      error: errors?.email?.message,
+      rules: {
+        required: {
+          value: true,
+          message: t('auth.resetPassword.emailRequired'),
         },
       },
     },
@@ -131,7 +152,8 @@ export default function ResetPasswordScreen() {
             style={themed(styles.primaryButton)}
             onPress={handleSubmit(handleReset)}
             disabled={
-              !!errors.token ||
+              !!errors.otp ||
+              !!errors.email ||
               !!errors.newPassword ||
               !!errors.confirmPassword ||
               isLoading

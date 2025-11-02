@@ -132,9 +132,16 @@ export const addCaseFiles = createAsyncThunk(
 
 export const addCaseNote = createAsyncThunk(
   'case/addCaseNote',
-  async ({ caseId, note }: { caseId: string; note: string }, thunkApi) => {
+  async (
+    {
+      caseId,
+      note,
+      role,
+    }: { caseId: string; note: string; role: 'client ' | 'lawyer' },
+    thunkApi,
+  ) => {
     try {
-      const response = await updateCaseNote(caseId, note);
+      const response = await updateCaseNote(caseId, note, role);
       return response;
     } catch (error: any) {
       if (error instanceof AxiosError) {

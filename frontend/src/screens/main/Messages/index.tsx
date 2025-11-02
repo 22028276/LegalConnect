@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
+  RefreshControl,
   Text,
   TouchableOpacity,
   View,
@@ -72,7 +73,8 @@ function ChatConversation({
         </View>
         <View style={themed(styles.messageRow)}>
           <Text style={themed(styles.lastMessage)} numberOfLines={1}>
-            {conversation?.last_message?.content || t('messages.noMessageContent')}
+            {conversation?.last_message?.content ||
+              t('messages.noMessageContent')}
           </Text>
           {/* <Text style={themed(styles.ticks)}>✓✓</Text> */}
         </View>
@@ -183,6 +185,12 @@ export default function MessagesScreen() {
           />
         )}
         contentContainerStyle={themed(styles.listContent)}
+        refreshControl={
+          <RefreshControl
+            refreshing={loadingConversations}
+            onRefresh={() => dispatch(fetchConversations())}
+          />
+        }
       />
     </SafeAreaView>
   );

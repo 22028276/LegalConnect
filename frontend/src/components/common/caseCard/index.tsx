@@ -13,6 +13,7 @@ import Icon from '@react-native-vector-icons/ionicons';
 import * as styles from './styles';
 import { ThemedStyle } from '../../../theme';
 import { Case } from '../../../types/case';
+import { useTranslation } from 'react-i18next';
 
 export interface CaseCardProps {
   caseData: Case;
@@ -37,6 +38,7 @@ export default function CaseCard({
   stylesOverride,
 }: CaseCardProps) {
   const { themed, theme } = useAppTheme();
+  const { t } = useTranslation();
   if (!caseData) {
     return null;
   }
@@ -50,6 +52,8 @@ export default function CaseCard({
 
   const getStatusColor = (caseStatus: string) => {
     switch (caseStatus) {
+      case 'PENDING':
+        return theme.colors.processStatus.pending;
       case 'IN_PROGRESS':
         return theme.colors.processStatus.pending;
       case 'COMPLETED':
@@ -61,7 +65,23 @@ export default function CaseCard({
     }
   };
 
+  const getStatusLabel = (caseStatus: string) => {
+    switch (caseStatus) {
+      case 'PENDING':
+        return t('cases.pending');
+      case 'IN_PROGRESS':
+        return t('cases.inProgress');
+      case 'COMPLETED':
+        return t('cases.completed');
+      case 'CANCELLED':
+        return t('cases.cancelled');
+      default:
+        return caseStatus;
+    }
+  };
+
   const statusColors = getStatusColor(state);
+  const statusLabel = getStatusLabel(state);
 
   return (
     <TouchableOpacity
@@ -109,7 +129,7 @@ export default function CaseCard({
               { color: statusColors.textColor },
             ]}
           >
-            {state}
+            {statusLabel}
           </Text>
         </View>
       </View>
@@ -123,7 +143,7 @@ export default function CaseCard({
           ]}
           numberOfLines={1}
         >
-          <Text style={themed(styles.labelText)}>Description: </Text>
+          <Text style={themed(styles.labelText)}>{t('cases.description')}: </Text>
           {description}
         </Text>
         <Text
@@ -133,7 +153,7 @@ export default function CaseCard({
           ]}
           numberOfLines={1}
         >
-          <Text style={themed(styles.labelText)}>Attachment: </Text>
+          <Text style={themed(styles.labelText)}>{t('cases.attachment')}: </Text>
           {attachment_urls?.length || 0}
         </Text>
       </View>
@@ -142,7 +162,7 @@ export default function CaseCard({
       {/* Footer Section */}
       <View style={themed(styles.footerSection)}>
         <Text style={themed(styles.lastUpdatedText)}>
-          Updated: {updated_at}
+          {t('cases.updated')}: {updated_at}
         </Text>
       </View>
     </TouchableOpacity>

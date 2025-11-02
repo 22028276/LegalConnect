@@ -16,6 +16,8 @@ import { useTranslation } from 'react-i18next';
 import { showSuccess } from '../../../../types/toast';
 import { useAppDispatch } from '../../../../redux/hook';
 import { addCaseNote } from '../../../../stores/case.slice';
+import { selectRole } from '../../../../stores/user.slice';
+import { store } from '../../../../redux/store';
 
 export const AddNoteModal = ({
   isAddNoteModalVisible,
@@ -43,8 +45,16 @@ export const AddNoteModal = ({
     if (!noteText.trim()) return;
 
     setSaving(true);
+    const role =
+      selectRole(store.getState()) === 'lawyer' ? 'lawyer' : 'client';
     try {
-      await dispatch(addCaseNote({ caseId, note: noteText.trim() })).unwrap();
+      await dispatch(
+        addCaseNote({
+          caseId,
+          note: noteText.trim(),
+          role: role as 'client ' | 'lawyer',
+        }),
+      ).unwrap();
 
       // Show success toast before closing modal
       showSuccess(t('toast.addNoteSuccessful'));

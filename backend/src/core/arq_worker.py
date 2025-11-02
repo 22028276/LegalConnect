@@ -13,7 +13,5 @@ class WorkerSettings:
     redis_settings = RedisSettings(
         host=settings.REDIS_HOST,
         port=settings.REDIS_PORT,
-        username="default",
-        password=getattr(settings, "REDIS_PASSWORD", None),
         database=0
     )

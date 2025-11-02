@@ -47,7 +47,6 @@ from src.booking.utils import (
     build_case_attachment_urls,
     delete_attachment,
     find_available_slot,
-    mark_expired_slots,
     generate_attachment_url,
     slot_overlaps,
     upload_attachment,
@@ -148,8 +147,6 @@ async def create_schedule_slot(payload: ScheduleSlotCreatePayload,
 
     _ensure_lawyer(current_user)
 
-    await mark_expired_slots(db)
-
     if payload.end_time <= payload.start_time:
         raise InvalidScheduleRange()
 
@@ -161,7 +158,6 @@ async def create_schedule_slot(payload: ScheduleSlotCreatePayload,
         lawyer_id=current_user.id,
         start_time=payload.start_time,
         end_time=payload.end_time,
-        expired=payload.end_time <= datetime.now(timezone.utc),
     )
     db.add(slot)
     await db.commit()
@@ -173,7 +169,6 @@ async def create_schedule_slot(payload: ScheduleSlotCreatePayload,
         start_time=slot.start_time,
         end_time=slot.end_time,
         is_booked=slot.is_booked,
-        expired=slot.expired,
         create_at=slot.create_at,
         updated_at=slot.updated_at,
     )
@@ -186,8 +181,6 @@ async def list_my_schedule(db: SessionDep,
 
     _ensure_lawyer(current_user)
 
-    await mark_expired_slots(db)
-
     result = await db.execute(
         select(LawyerScheduleSlot).where(LawyerScheduleSlot.lawyer_id == current_user.id)
     )
@@ -199,7 +192,6 @@ async def list_my_schedule(db: SessionDep,
             start_time=slot.start_time,
             end_time=slot.end_time,
             is_booked=slot.is_booked,
-            expired=slot.expired,
             create_at=slot.create_at,
             updated_at=slot.updated_at,
         )
@@ -213,13 +205,10 @@ async def list_public_schedule(lawyer_id: UUID,
                                db: SessionDep
                                ) -> List[ScheduleSlotResponse]:
 
-    await mark_expired_slots(db)
-
     result = await db.execute(
         select(LawyerScheduleSlot).where(
             LawyerScheduleSlot.lawyer_id == lawyer_id,
             LawyerScheduleSlot.is_booked.is_(False),
-            LawyerScheduleSlot.expired.is_(False),
         )
     )
     slots = result.scalars().all()
@@ -230,7 +219,6 @@ async def list_public_schedule(lawyer_id: UUID,
             start_time=slot.start_time,
             end_time=slot.end_time,
             is_booked=slot.is_booked,
-            expired=slot.expired,
             create_at=slot.create_at,
             updated_at=slot.updated_at,
         )
@@ -246,7 +234,6 @@ async def update_schedule_slot(slot_id: UUID,
                                ) -> ScheduleSlotResponse:
 
     _ensure_lawyer(current_user)
-    await mark_expired_slots(db)
     slot = await _get_schedule_slot(db, slot_id)
 
     if slot.lawyer_id != current_user.id:
@@ -264,7 +251,6 @@ async def update_schedule_slot(slot_id: UUID,
 
     slot.start_time = payload.start_time
     slot.end_time = payload.end_time
-    slot.expired = payload.end_time <= datetime.now(timezone.utc)
 
     await db.commit()
     await db.refresh(slot)
@@ -275,7 +261,6 @@ async def update_schedule_slot(slot_id: UUID,
         start_time=slot.start_time,
         end_time=slot.end_time,
         is_booked=slot.is_booked,
-        expired=slot.expired,
         create_at=slot.create_at,
         updated_at=slot.updated_at,
     )
@@ -289,7 +274,6 @@ async def delete_schedule_slot(
 ) -> None:
 
     _ensure_lawyer(current_user)
-    await mark_expired_slots(db)
     slot = await _get_schedule_slot(db, slot_id)
 
     if slot.lawyer_id != current_user.id:
@@ -319,7 +303,6 @@ async def create_booking_request(
 ) -> BookingRequestCreateResponse:
 
     _ensure_client(current_user)
-    await mark_expired_slots(db)
 
     if not title.strip():
         raise InvalidBookingPayload("Title cannot be empty.")
@@ -424,7 +407,6 @@ async def decide_booking_request(
     current_user: User = Depends(get_current_user),
 ) -> BookingDecisionResponse:
 
-    await mark_expired_slots(db)
     booking = await _get_booking(db, booking_id)
 
     if booking.lawyer_id != current_user.id:
@@ -436,8 +418,6 @@ async def decide_booking_request(
     slot = None
     if booking.schedule_slot_id:
         slot = await _get_schedule_slot(db, booking.schedule_slot_id)
-        if slot.expired:
-            slot = None
 
     now = datetime.now(timezone.utc)
 
@@ -635,7 +615,6 @@ async def rate_case(
         lawyer_id=case.lawyer_id,
         client_id=case.client_id,
         stars=stars,
-        detailed_review=payload.detailed_review.strip(),
     )
     db.add(rating)
     await db.commit()

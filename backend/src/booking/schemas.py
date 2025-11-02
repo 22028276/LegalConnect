@@ -1,10 +1,9 @@
 from __future__ import annotations
-import re
 
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 from src.booking.constants import (
     BookingRequestStatus,
@@ -12,9 +11,6 @@ from src.booking.constants import (
     MAX_BOOKING_TITLE_LENGTH,
     MAX_BOOKING_DESCRIPTION_LENGTH,
     MAX_NOTE_LENGTH,
-    MAX_REVIEW_LENGTH,
-    MIN_REVIEW_SENTENCES,
-    MAX_REVIEW_SENTENCES,
 )
 
 
@@ -29,7 +25,6 @@ class ScheduleSlotResponse(BaseModel):
     start_time: datetime
     end_time: datetime
     is_booked: bool
-    expired: bool
     create_at: datetime
     updated_at: datetime
 
@@ -103,17 +98,6 @@ class CaseNotePayload(BaseModel):
 
 class RatingPayload(BaseModel):
     stars: int = Field(..., ge=1, le=5)
-    detailed_review: str = Field(..., min_length=1, max_length=MAX_REVIEW_LENGTH)
-
-    @field_validator("detailed_review")
-    @classmethod
-    def validate_review_length(cls, value: str) -> str:
-        sentences = [segment.strip() for segment in re.split(r"[.!?]+", value) if segment.strip()]
-        if not (MIN_REVIEW_SENTENCES <= len(sentences) <= MAX_REVIEW_SENTENCES):
-            raise ValueError(
-                f"Detailed review must contain between {MIN_REVIEW_SENTENCES} and {MAX_REVIEW_SENTENCES} sentences."
-            )
-        return value
 
 
 class RatingResponse(BaseModel):
@@ -122,6 +106,5 @@ class RatingResponse(BaseModel):
     lawyer_id: UUID
     client_id: UUID
     stars: int
-    detailed_review: str
     create_at: datetime
     updated_at: datetime
