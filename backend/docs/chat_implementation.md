@@ -33,7 +33,7 @@ Kiến trúc tổng quan WebSocket
 2. A gửi gói JSON qua WS:
    ```json
    {"type":"message","conversation_id":"<uuid>","content":"Xin chào"}
-   ```
+   ``` 
 3. Backend kiểm tra:
    - **Membership**: A có thuộc conversation không?
    - **Moderation**: content không rỗng, không quá dài, không chứa URL bị chặn…

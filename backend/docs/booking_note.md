@@ -24,7 +24,7 @@ Booking module endpoint overview
    - Endpoint: PATCH /booking/cases/{case_id} (update_case_history) lets the lawyer edit title/description and close the case.
    - Endpoint: PATCH /booking/cases/{case_id}/notes (update_case_notes) allows each party to manage their own notes.
    - Endpoint: POST /booking/cases/{case_id}/attachments (add_case_attachment) stores additional evidence files.
-
+ 
 5. Ratings after case completion
    - Endpoint: POST /booking/cases/{case_id}/rating (rate_case) lets the client submit 1-5 star feedback for completed cases.
    - Endpoint: GET /booking/cases/{case_id}/rating (get_case_rating) returns the existing rating to authorised participants.
