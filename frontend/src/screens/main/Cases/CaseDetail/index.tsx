@@ -468,8 +468,9 @@ export const CaseDetail = () => {
 
         {/* Action Buttons */}
         <View style={themed(styles.buttonContainer)}>
-          {/* Complete and Cancel buttons - Only for active cases with IN_PROGRESS state */}
-          {!isDisplayPending && 
+          {/* Complete and Cancel buttons - Only for lawyers on active cases with IN_PROGRESS state */}
+          {isLawyer && 
+           !isDisplayPending && 
            (displayCase as Case).state === 'IN_PROGRESS' && (
             <>
               <TouchableOpacity
