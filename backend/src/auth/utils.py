@@ -4,9 +4,6 @@ import resend
 
 from src.core.config import settings
 
-# Initialize Resend client
-resend.api_key = settings.MAIL_PASSWORD
-
 async def send_reset_email(ctx, to_email: str, reset_otp: str):
     """Async function để gửi email với OTP qua Resend API"""
     subject = "Password Reset Request - OTP Code"
@@ -26,7 +23,10 @@ async def send_reset_email(ctx, to_email: str, reset_otp: str):
     try:
         print(f"Sending email to {to_email} via Resend API...", flush=True)
         
-        # Resend API - chạy trong thread pool vì resend library có thể là blocking
+        # Resend API - set API key và gửi email
+        # Resend 2.x API
+        resend.api_key = settings.MAIL_PASSWORD
+        
         params = {
             "from": f"LegalConnect Support <{settings.MAIL_FROM}>",
             "to": [to_email],
@@ -42,7 +42,8 @@ async def send_reset_email(ctx, to_email: str, reset_otp: str):
         else:
             print(f"Email sent successfully to {to_email}", flush=True)
         
-    except resend.errors.ResendError as e:
+    except AttributeError as e:
+        # Nếu resend.errors không tồn tại (version cũ)
         error_msg = f"Resend API error: {str(e)}"
         print(f"ERROR: {error_msg}", flush=True)
         raise RuntimeError(error_msg)
