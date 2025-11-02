@@ -1,6 +1,5 @@
 import asyncio
 import pyotp
-import resend
 import httpx
 
 from src.core.config import settings
@@ -78,6 +77,9 @@ async def _send_via_brevo(to_email: str, subject: str, html_body: str):
 async def _send_via_resend(to_email: str, subject: str, html_body: str):
     """Gửi email qua Resend API"""
     try:
+        # Import resend chỉ khi cần dùng
+        import resend
+        
         print(f"Sending email to {to_email} via Resend API...", flush=True)
         
         # Resend API - set API key và gửi email
@@ -99,24 +101,29 @@ async def _send_via_resend(to_email: str, subject: str, html_body: str):
         else:
             print(f"Email sent successfully to {to_email}", flush=True)
         
+    except ImportError:
+        error_msg = "Resend package not installed. Install with: uv add resend>=2.0.0"
+        print(f"ERROR: {error_msg}", flush=True)
+        raise RuntimeError(error_msg)
     except AttributeError as e:
         # Nếu resend.errors không tồn tại (version cũ)
         error_msg = f"Resend API error: {str(e)}"
         print(f"ERROR: {error_msg}", flush=True)
         raise RuntimeError(error_msg)
-    except resend.exceptions.ResendError as e:
-        # Resend API error cụ thể
-        error_msg = str(e)
-        print(f"ERROR: Resend API error - {error_msg}", flush=True)
-        
-        # Hiển thị message rõ ràng hơn
-        if "testing emails" in error_msg.lower() or "verify a domain" in error_msg.lower():
-            error_msg = f"Resend restriction: {error_msg}. To send to any email, verify a domain at resend.com/domains"
-        
-        raise RuntimeError(error_msg)
     except Exception as e:
-        error_msg = f"Failed to send email via Resend: {str(e)}"
-        print(f"ERROR: {error_msg}", flush=True)
+        error_class_name = type(e).__name__
+        if "ResendError" in error_class_name:
+            # Resend API error cụ thể
+            error_msg = str(e)
+            print(f"ERROR: Resend API error - {error_msg}", flush=True)
+            
+            # Hiển thị message rõ ràng hơn
+            if "testing emails" in error_msg.lower() or "verify a domain" in error_msg.lower():
+                error_msg = f"Resend restriction: {error_msg}. To send to any email, verify a domain at resend.com/domains"
+        else:
+            error_msg = f"Failed to send email via Resend: {str(e)}"
+            print(f"ERROR: {error_msg}", flush=True)
+        
         raise RuntimeError(error_msg)
 
 
