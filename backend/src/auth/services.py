@@ -1,4 +1,5 @@
 import hashlib
+import secrets
 
 from datetime import timezone, datetime, timedelta
 from passlib.context import CryptContext
@@ -65,7 +66,13 @@ def verify_reset_token(token: str) -> str:
         return payload.get("sub")
     except JWTError:
         raise NotAuthenticated()
-    
+
+
+def generate_reset_otp() -> str:
+    """Tạo OTP 6 số cho password reset"""
+    return f"{secrets.randbelow(1000000):06d}"
+
+
 def _ua_fingerprint(user_agent: str) -> str:
     return hashlib.sha256(user_agent.encode("utf-8")).hexdigest()
 
