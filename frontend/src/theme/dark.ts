@@ -9,8 +9,8 @@ export const colors = {
 
   processStatus: {
     approved: {
-      badgeColor: '##49cc90', // primaryContainer
-      textColor: '#0ca751', // primary
+      badgeColor: '#49cc90', // primaryContainer
+      textColor: '#fff', // primary
     },
     pending: {
       badgeColor: '#D97706', // secondaryContainer

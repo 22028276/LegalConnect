@@ -86,21 +86,14 @@ export const fetchUserInfo = async () => {
 export const updateUserInfo = async (data: any) => {
   console.log(data);
   try {
-    // API only accepts JSON with avatar_url as string
-    // If user selected a file, we skip it (TODO: implement separate avatar upload endpoint)
-    const body: any = {
-      username: data.username,
-      phone_number: data.phone_number,
-      address: data.address,
-    };
+    const formData = new FormData();
+    formData.append('username', data.username);
+    formData.append('phone_number', data.phone_number);
+    formData.append('address', data.address);
+    formData.append('avatar', data.avatar);
 
-    // Only include avatar_url if it's a string URL (not a file object)
-    if (data.avatar_url && typeof data.avatar_url === 'object') {
-      body.avatar_url = data.avatar_url;
-    }
-
-    const response = await axios.put('/users/update', body, {
-      headers: { 'Content-Type': 'application/json' },
+    const response = await axios.put('/users/update', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
       baseURL: envConfig.baseUrl,
     });
 
@@ -122,6 +115,30 @@ export const updateUserInfo = async (data: any) => {
   }
 };
 
+export const updateLawyerInfo = async (data: any) => {
+  console.log(data);
+  // const data = new FormData();
+
+  try {
+    const response = await axios.patch('/lawyer/profile/me', data, {
+      headers: { 'Content-Type': 'application/json' },
+      baseURL: envConfig.baseUrl,
+    });
+    showSuccess(t('toast.updateLawyerInfoSuccessful'));
+    return response.data;
+  } catch (error: any) {
+    console.log('error update lawyer info: ', error);
+    const errmsg = error?.response?.data;
+    const message =
+      errmsg?.message ||
+      errmsg?.detail ||
+      errmsg?.error ||
+      error?.message ||
+      'Update lawyer info failed';
+    showError(t('toast.updateLawyerInfoFailed'), message);
+    throw error;
+  }
+};
 export const forgotPassword = async (email: string) => {
   try {
     const response = await axios.post(

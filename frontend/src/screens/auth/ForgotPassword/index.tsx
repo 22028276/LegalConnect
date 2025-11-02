@@ -38,7 +38,7 @@ export default function ForgotPasswordScreen() {
       await forgotPassword(data.email);
       // Success toast shown in service layer
       // User will receive token via email, then manually enter it in ResetPassword screen
-      navigation.navigate('ResetPassword');
+      navigation.navigate('ResetPassword', { email: data.email });
     } catch (error) {
       console.error('Forgot password error:', error);
     } finally {

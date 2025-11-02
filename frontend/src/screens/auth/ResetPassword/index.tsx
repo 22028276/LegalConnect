@@ -26,12 +26,18 @@ type FormResetPassword = {
   confirmPassword: string;
 };
 
-export default function ResetPasswordScreen() {
+export default function ResetPasswordScreen({ route }: { route: any }) {
   const navigation = useNavigation<any>();
   const { themed, theme } = useAppTheme();
   const { t } = useTranslation();
+  const { email } = route.params;
   const control = useForm<FormResetPassword>({
-    defaultValues: { otp: '', email: '', newPassword: '', confirmPassword: '' },
+    defaultValues: {
+      otp: '',
+      email: email,
+      newPassword: '',
+      confirmPassword: '',
+    },
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -69,6 +75,7 @@ export default function ResetPasswordScreen() {
       type: 'input',
       keyboardType: 'numeric',
       error: errors?.otp?.message,
+      icon: 'keypad',
       rules: {
         required: {
           value: true,
@@ -83,6 +90,7 @@ export default function ResetPasswordScreen() {
       placeholder: t('auth.resetPassword.emailPlaceholder'),
       type: 'input',
       error: errors?.email?.message,
+      icon: 'mail-outline',
       rules: {
         required: {
           value: true,
@@ -97,6 +105,8 @@ export default function ResetPasswordScreen() {
       placeholder: t('auth.resetPassword.newPasswordPlaceholder'),
       type: 'password',
       error: errors?.newPassword?.message,
+      secureTextEntry: true,
+      icon: 'lock-closed-outline',
       rules: {
         required: {
           value: true,
@@ -115,6 +125,8 @@ export default function ResetPasswordScreen() {
       placeholder: t('auth.resetPassword.confirmPasswordPlaceholder'),
       type: 'password',
       error: errors?.confirmPassword?.message,
+      secureTextEntry: true,
+      icon: 'lock-closed-outline',
       rules: {
         required: {
           value: true,

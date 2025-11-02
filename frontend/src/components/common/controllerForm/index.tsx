@@ -5,6 +5,7 @@ import Input from '../input';
 import RadioGroup from '../radio';
 import DatePicker from '../datePicker';
 import FilePicker from '../filePicker';
+import DropDownSelect from '../dropDown';
 
 export default function ControllerForm({
   fields,
@@ -38,14 +39,14 @@ export default function ControllerForm({
             }
             render={({ field: { value, onChange } }) => {
               switch (type) {
-                // case 'select':
-                //   return (
-                //     <DropDownSelect
-                //       {...restProps}
-                //       value={value}
-                //       onSelect={onChange}
-                //     />
-                //   );
+                case 'select':
+                  return (
+                    <DropDownSelect
+                      {...restProps}
+                      value={value}
+                      onSelect={onChange}
+                    />
+                  );
                 case 'radio':
                   return (
                     <RadioGroup

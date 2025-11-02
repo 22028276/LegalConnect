@@ -33,8 +33,9 @@ import {
 import { AddNoteModal } from '../NoteModal';
 import { AddFileModal } from '../AddFileModal';
 import { store } from '../../../../redux/store';
-import { selectRole } from '../../../../stores/user.slice';
+import { selectRole, selectUser } from '../../../../stores/user.slice';
 import { updateCaseState } from '../../../../services/case';
+import { decideBookingRequest } from '../../../../services/booking';
 import { Alert } from 'react-native';
 
 type CaseDetailRouteProp = RouteProp<
@@ -55,9 +56,11 @@ export const CaseDetail = () => {
   const [isAddNoteModalVisible, setIsAddNoteModalVisible] = useState(false);
   const [isAddFileModalVisible, setIsAddFileModalVisible] = useState(false);
   const [isUpdatingState, setIsUpdatingState] = useState(false);
+  const [isProcessingDecision, setIsProcessingDecision] = useState(false);
   const { caseId, isPending } = route.params;
   const caseData = useAppSelector(selectCurrentCase);
   const isLoading = useAppSelector(selectIsLoading);
+  const user = useAppSelector(selectUser);
   const { t } = useTranslation();
   const isLawyer = selectRole(store.getState()) === 'lawyer';
   useEffect(() => {
@@ -267,6 +270,82 @@ export const CaseDetail = () => {
     ]);
   };
 
+  // Check if this is an incoming pending booking request for the lawyer
+  const isIncomingPendingRequest =
+    isDisplayPending &&
+    isLawyer &&
+    user?.id &&
+    (displayCase as BookingRequest).lawyer_id === user.id &&
+    (displayCase as BookingRequest).client_id !== user.id &&
+    (displayCase as BookingRequest).status === 'PENDING';
+
+  const handleAcceptRequest = async () => {
+    if (!isDisplayPending || !isIncomingPendingRequest) return;
+
+    Alert.alert(
+      t('caseDetail.acceptRequest'),
+      t('caseDetail.acceptRequestConfirm'),
+      [
+        {
+          text: t('caseDetail.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('caseDetail.accept'),
+          onPress: async () => {
+            setIsProcessingDecision(true);
+            try {
+              await decideBookingRequest(caseId, { accept: true });
+              refetchCase();
+              // Navigate back after successful acceptance
+              setTimeout(() => {
+                navigation.goBack();
+              }, 500);
+            } catch (error) {
+              console.error('Failed to accept booking request:', error);
+            } finally {
+              setIsProcessingDecision(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleDeclineRequest = async () => {
+    if (!isDisplayPending || !isIncomingPendingRequest) return;
+
+    Alert.alert(
+      t('caseDetail.declineRequest'),
+      t('caseDetail.declineRequestConfirm'),
+      [
+        {
+          text: t('caseDetail.cancel'),
+          style: 'cancel',
+        },
+        {
+          text: t('caseDetail.decline'),
+          style: 'destructive',
+          onPress: async () => {
+            setIsProcessingDecision(true);
+            try {
+              await decideBookingRequest(caseId, { accept: false });
+              refetchCase();
+              // Navigate back after successful decline
+              setTimeout(() => {
+                navigation.goBack();
+              }, 500);
+            } catch (error) {
+              console.error('Failed to decline booking request:', error);
+            } finally {
+              setIsProcessingDecision(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
   return (
     <SafeAreaView style={themed(styles.container)}>
       <Header
@@ -464,28 +543,71 @@ export const CaseDetail = () => {
 
         {/* Action Buttons */}
         <View style={themed(styles.buttonContainer)}>
+          {isIncomingPendingRequest && (
+            <>
+              <TouchableOpacity
+                style={[
+                  themed(styles.completeButton),
+                  isProcessingDecision && themed(styles.buttonDisabled),
+                ]}
+                onPress={handleAcceptRequest}
+                disabled={isProcessingDecision}
+              >
+                {isProcessingDecision ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={theme.colors.onSurfaceVariant}
+                  />
+                ) : (
+                  <>
+                    <Icon
+                      name="checkmark-circle-outline"
+                      size={moderateScale(20)}
+                      color={theme.colors.onPrimary}
+                    />
+                    <Text style={themed(styles.completeButtonText)}>
+                      {t('caseDetail.accept')}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  themed(styles.cancelButton),
+                  isProcessingDecision && themed(styles.buttonDisabled),
+                ]}
+                onPress={handleDeclineRequest}
+                disabled={isProcessingDecision}
+              >
+                {isProcessingDecision ? (
+                  <ActivityIndicator size="small" color={theme.colors.error} />
+                ) : (
+                  <>
+                    <Icon
+                      name="close-circle-outline"
+                      size={moderateScale(20)}
+                      color={theme.colors.error}
+                    />
+                    <Text
+                      style={[
+                        themed(styles.cancelButtonText),
+                        { color: theme.colors.error },
+                      ]}
+                    >
+                      {t('caseDetail.decline')}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </>
+          )}
+
           {/* Complete and Cancel buttons - Only for lawyers on active cases with IN_PROGRESS state */}
-          <Pressable
-            style={themed(styles.primaryButton)}
-            onPress={handleChatPress}
-          >
-            <Icon
-              name="chatbubble-outline"
-              size={moderateScale(20)}
-              color={theme.colors.onPrimary}
-            />
-            <Text style={themed(styles.primaryButtonText)}>
-              {isLawyer
-                ? t('caseDetail.contactClient')
-                : t('caseDetail.contactLawyer')}
-            </Text>
-          </Pressable>
           {isLawyer &&
             !isDisplayPending &&
-            (displayCase as Case).state === 'IN_PROGRESS' && (
+            (displayCase as Case).state === 'IN_PROGRESS' &&
+            !isIncomingPendingRequest && (
               <>
-                {/* Contact button */}
-
                 <TouchableOpacity
                   style={[
                     themed(styles.completeButton),
@@ -497,14 +619,14 @@ export const CaseDetail = () => {
                   {isUpdatingState ? (
                     <ActivityIndicator
                       size="small"
-                      color={theme.colors.onPrimary}
+                      color={theme.colors.primary}
                     />
                   ) : (
                     <>
                       <Icon
                         name="checkmark-circle-outline"
                         size={moderateScale(20)}
-                        color={theme.colors.onPrimary}
+                        color={theme.colors.primary}
                       />
                       <Text style={themed(styles.completeButtonText)}>
                         {t('caseDetail.complete')}
@@ -545,6 +667,23 @@ export const CaseDetail = () => {
                 </TouchableOpacity>
               </>
             )}
+
+          {/* Contact button - Show only when not showing Accept/Decline buttons */}
+          <Pressable
+            style={themed(styles.primaryButton)}
+            onPress={handleChatPress}
+          >
+            <Icon
+              name="chatbubble-outline"
+              size={moderateScale(20)}
+              color={theme.colors.onPrimary}
+            />
+            <Text style={themed(styles.primaryButtonText)}>
+              {isLawyer
+                ? t('caseDetail.contactClient')
+                : t('caseDetail.contactLawyer')}
+            </Text>
+          </Pressable>
         </View>
       </ScrollView>
       <AddNoteModal

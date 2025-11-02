@@ -4,6 +4,7 @@ import {
   getLawyerById,
   getLawyerSchedule,
   getPopularLawyers,
+  getAllLawyers,
 } from '../services/lawyer';
 import { showError } from '../types/toast';
 
@@ -56,6 +57,25 @@ export const fetchLawyerSchedule = createAsyncThunk(
         error?.message ||
         'Failed to fetch schedule';
       showError(message);
+      return thunkApi.rejectWithValue(message);
+    }
+  },
+);
+
+export const fetchAllLawyers = createAsyncThunk(
+  'lawyer/fetchAllLawyers',
+  async (_, thunkApi) => {
+    try {
+      const response = await getAllLawyers();
+      return response;
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        error?.response?.data?.detail ||
+        error?.response?.data?.error ||
+        error?.message ||
+        'Failed to fetch lawyers';
+      showError(t('toast.loadLawyersFailed'), message);
       return thunkApi.rejectWithValue(message);
     }
   },
@@ -120,6 +140,19 @@ export const lawyerSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchLawyerSchedule.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchAllLawyers.pending, state => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllLawyers.fulfilled, (state, action) => {
+        state.lawyers = action.payload;
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(fetchAllLawyers.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       });

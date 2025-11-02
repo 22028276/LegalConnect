@@ -14,10 +14,13 @@ import * as styles from './styles';
 import { ThemedStyle } from '../../../theme';
 import { Case } from '../../../types/case';
 import { useTranslation } from 'react-i18next';
+import { selectRole } from '../../../stores/user.slice';
+import { store } from '../../../redux/store';
 
 export interface CaseCardProps {
   caseData: Case;
   onPress?: () => void;
+  onRatePress?: () => void;
   stylesOverride?: CaseCardStylesOverride;
 }
 
@@ -35,10 +38,12 @@ export interface CaseCardStylesOverride {
 export default function CaseCard({
   caseData,
   onPress,
+  onRatePress,
   stylesOverride,
 }: CaseCardProps) {
   const { themed, theme } = useAppTheme();
   const { t } = useTranslation();
+  const role = selectRole(store.getState());
   if (!caseData) {
     return null;
   }
@@ -143,7 +148,9 @@ export default function CaseCard({
           ]}
           numberOfLines={1}
         >
-          <Text style={themed(styles.labelText)}>{t('cases.description')}: </Text>
+          <Text style={themed(styles.labelText)}>
+            {t('cases.description')}:{' '}
+          </Text>
           {description}
         </Text>
         <Text
@@ -153,7 +160,9 @@ export default function CaseCard({
           ]}
           numberOfLines={1}
         >
-          <Text style={themed(styles.labelText)}>{t('cases.attachment')}: </Text>
+          <Text style={themed(styles.labelText)}>
+            {t('cases.attachment')}:{' '}
+          </Text>
           {attachment_urls?.length || 0}
         </Text>
       </View>
@@ -165,6 +174,25 @@ export default function CaseCard({
           {t('cases.updated')}: {updated_at}
         </Text>
       </View>
+
+      {/* Rating Button - Only show when status is COMPLETED */}
+      {state === 'COMPLETED' && role === 'client' && (
+        <TouchableOpacity
+          style={themed(styles.ratingButton)}
+          onPress={e => {
+            e.stopPropagation();
+            onRatePress?.();
+          }}
+          activeOpacity={0.8}
+        >
+          <Icon
+            name="star-outline"
+            size={moderateScale(theme.fontSizes.md)}
+            color={theme.colors.primary}
+          />
+          <Text style={themed(styles.ratingButtonText)}>{t('cases.rate')}</Text>
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 }

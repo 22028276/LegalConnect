@@ -13,11 +13,17 @@ export const profileSection: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   paddingBottom: verticalScale(spacing.lg),
 });
 
-export const avatar: ThemedStyle<ImageStyle> = ({ spacing }) => ({
+export const avatarContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   width: scale(spacing.xxxxl),
   height: scale(spacing.xxxxl),
-  borderRadius: 100,
+  borderRadius: scale(spacing.xxxxl) / 2,
   marginBottom: verticalScale(spacing.sm),
+  overflow: 'hidden',
+});
+
+export const avatar: ThemedStyle<ImageStyle> = ({}) => ({
+  width: '100%',
+  height: '100%',
 });
 
 export const profileName: ThemedStyle<TextStyle> = ({ colors, fontSizes }) => ({

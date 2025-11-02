@@ -1,11 +1,14 @@
 import Ionicons from '@react-native-vector-icons/ionicons';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
-import React, { useEffect } from 'react';
+import {
+  NavigationProp,
+  useFocusEffect,
+  useNavigation,
+} from '@react-navigation/native';
+import React, { useCallback, useEffect } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   Image,
-  RefreshControl,
   Text,
   TouchableOpacity,
   View,
@@ -96,11 +99,12 @@ export default function MessagesScreen() {
     (state: any) => state?.message?.loadingConversations,
   );
   const userId = useAppSelector((state: any) => state.user.user.id);
-  console.log('userId: ', userId);
 
-  useEffect(() => {
-    dispatch(fetchConversations());
-  }, [dispatch]);
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(fetchConversations());
+    }, [dispatch]),
+  );
 
   useEffect(() => {
     const token =
@@ -185,12 +189,6 @@ export default function MessagesScreen() {
           />
         )}
         contentContainerStyle={themed(styles.listContent)}
-        refreshControl={
-          <RefreshControl
-            refreshing={loadingConversations}
-            onRefresh={() => dispatch(fetchConversations())}
-          />
-        }
       />
     </SafeAreaView>
   );

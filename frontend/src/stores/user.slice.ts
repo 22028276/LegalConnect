@@ -2,6 +2,7 @@ import {
   fetchUserInfo,
   signIn,
   signUp,
+  updateLawyerInfo,
   updateUserInfo,
 } from '../services/auth';
 import { FormLogin, FormSignUp } from '../types/auth';
@@ -94,18 +95,21 @@ export const getUserInfo = createAsyncThunk(
   async (_, thunkApi) => {
     try {
       const response = await fetchUserInfo();
-      const data = response.data;
+      // API might return data directly or wrapped in data.data
+      const data = response.data?.data || response.data;
+      console.log('getUserInfo response data:', data);
       // API returns: { id, username, email, phone_number, address, role, avatar_url }
       // Normalize avatar_url to avatar for state
       const normalizedUser: User = {
-        id: data.id || '',
+        id: data.id || data.user_id || '',
         username: data.username || '',
         email: data.email || '',
         phone_number: data.phone_number || '',
         address: data.address || '',
         role: data.role || '',
-        avatar: data.avatar_url || '',
+        avatar: data.avatar_url || data.avatar || '',
       };
+      console.log('normalizedUser avatar:', normalizedUser.avatar);
       return normalizedUser;
     } catch (error: any) {
       return thunkApi.rejectWithValue(
@@ -129,12 +133,26 @@ export const updateUserProfile = createAsyncThunk(
         phone_number: response.phone_number || '',
         address: response.address || '',
         role: response.role || '',
-        avatar: response.avatar_url || '',
+        avatar: response.avatar || '',
       };
       return normalizedUser;
     } catch (error: any) {
       return thunkApi.rejectWithValue(
         error.message || 'Update user info failed',
+      );
+    }
+  },
+);
+
+export const updateLawyerProfile = createAsyncThunk(
+  'user/updateLawyerProfile',
+  async (data: any, thunkApi) => {
+    try {
+      const response = await updateLawyerInfo(data);
+      return response;
+    } catch (error: any) {
+      return thunkApi.rejectWithValue(
+        error.message || 'Update lawyer info failed',
       );
     }
   },

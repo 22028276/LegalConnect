@@ -83,7 +83,7 @@ export const getPendingCase = async () => {
 };
 
 export interface CaseNotePayload {
-  role: 'client ' | 'lawyer';
+  role: 'client' | 'lawyer';
   note: string;
 }
 
@@ -224,11 +224,12 @@ export const updateCaseFiles = async (caseId: string, files: File) => {
 export const updateCaseNote = async (
   caseId: string,
   note: string,
-  role: 'client ' | 'lawyer',
+  role: 'client' | 'lawyer',
 ) => {
   try {
+    const roleTrimmed = role.trim();
     const response = await axios.patch(`/booking/cases/${caseId}/notes`, {
-      [role === 'client' ? 'client_note' : 'lawyer_note']: note,
+      [roleTrimmed === 'client' ? 'client_note' : 'lawyer_note']: note,
     });
     return response.data;
   } catch (error: any) {
@@ -260,9 +261,10 @@ export const updateCaseState = async (
       headers: { 'Content-Type': 'application/json' },
     });
     const payload = response?.data?.data ?? response?.data;
-    const stateMessage = data.state === 'COMPLETED' 
-      ? t('toast.caseCompleted') || 'Case marked as completed'
-      : t('toast.caseCancelled') || 'Case marked as cancelled';
+    const stateMessage =
+      data.state === 'COMPLETED'
+        ? t('toast.caseCompleted') || 'Case marked as completed'
+        : t('toast.caseCancelled') || 'Case marked as cancelled';
     showSuccess(stateMessage);
     return payload;
   } catch (error: any) {
@@ -274,6 +276,45 @@ export const updateCaseState = async (
       error?.message ||
       'Failed to update case state';
     showError('Failed to update case state', message);
+    throw new Error(message);
+  }
+};
+
+export interface RateCasePayload {
+  stars: number;
+  detailed_review?: string;
+}
+
+export const rateCase = async (
+  caseId: string,
+  data: RateCasePayload,
+): Promise<any> => {
+  try {
+    const response = await axios.post(
+      `/booking/cases/${caseId}/rating`,
+      {
+        stars: data.stars,
+        detailed_review: data.detailed_review,
+      },
+      {
+        baseURL: envConfig.baseUrl,
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+    const payload = response?.data?.data ?? response?.data;
+    const successMessage =
+      t('rating.success') || 'Rating submitted successfully';
+    showSuccess(successMessage);
+    return payload;
+  } catch (error: any) {
+    const errmsg = error?.response?.data;
+    const message =
+      errmsg?.message ||
+      errmsg?.detail ||
+      errmsg?.error ||
+      error?.message ||
+      'Failed to submit rating';
+    showError('Failed to submit rating', message);
     throw new Error(message);
   }
 };

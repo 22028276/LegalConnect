@@ -155,10 +155,7 @@ export const inputButton: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   padding: moderateScale(spacing.xs),
 });
 
-export const textInputContainer: ThemedStyle<ViewStyle> = ({
-  colors,
-  spacing,
-}) => ({
+export const textInputContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   flex: 1,
   backgroundColor: '#F2F2F7',
   borderRadius: moderateScale(20),
