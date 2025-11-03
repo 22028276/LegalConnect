@@ -89,7 +89,7 @@ async def register(user: UserCreate,
 
 @user_route.get('/me', response_model=UserResponse)
 async def get_user(current_user: User = Depends(get_current_user)):
-    return current_user
+    return await serialize_user(current_user)
 
 
 async def _store_avatar_and_get_key(current_user: User, avatar: UploadFile) -> str:
