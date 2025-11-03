@@ -38,6 +38,7 @@ from src.lawyer.exceptions import (
     LawyerProfileInvalidField,
     LawyerProfileInvalidLanguages,
     LawyerProfileNotFound,
+    LawyerProfilePhoneNumberConflict,
     InvalidRevocationReason,
     InvalidCurrentRoleRevocation,
     LawyerProfileNotFound,
@@ -584,23 +585,6 @@ async def list_lawyer_profiles(db: SessionDep,
     return profiles
 
 
-@lawyer_route.get("/profile/{lawyer_id}",
-                  response_model=LawyerProfileResponse)
-async def get_public_lawyer_profile(lawyer_id: UUID,
-                                    db: SessionDep
-                                    ) -> LawyerProfileResponse:
-    
-    profile = await _get_lawyer_profile(db, lawyer_id)
-    if not profile:
-        raise LawyerProfileNotFound()
-
-    user = await db.get(User, lawyer_id)
-    if not user or user.role != UserRole.LAWYER.value:
-        raise LawyerProfileNotFound()
-
-    return await _build_profile_response(db, profile, user)
-
-
 @lawyer_route.get("/profile/me",
                   response_model=LawyerProfileResponse)
 async def get_my_lawyer_profile(db: SessionDep,
@@ -615,6 +599,23 @@ async def get_my_lawyer_profile(db: SessionDep,
         raise LawyerProfileNotFound()
 
     user = await db.get(User, current_user.id) or current_user
+    return await _build_profile_response(db, profile, user)
+
+
+@lawyer_route.get("/profile/{lawyer_id}",
+                  response_model=LawyerProfileResponse)
+async def get_public_lawyer_profile(lawyer_id: UUID,
+                                    db: SessionDep
+                                    ) -> LawyerProfileResponse:
+    
+    profile = await _get_lawyer_profile(db, lawyer_id)
+    if not profile:
+        raise LawyerProfileNotFound()
+
+    user = await db.get(User, lawyer_id)
+    if not user or user.role != UserRole.LAWYER.value:
+        raise LawyerProfileNotFound()
+
     return await _build_profile_response(db, profile, user)
 
 
@@ -680,9 +681,22 @@ async def update_my_lawyer_profile(
             continue
 
         normalized = _normalize(value, label)
-        setattr(profile, field, normalized)
         if field == "phone_number":
+            if normalized != user.phone_number:
+                existing_phone = await db.execute(
+                    select(User.id).where(
+                        User.phone_number == normalized,
+                        User.id != user.id,
+                    )
+                )
+                if existing_phone.scalar_one_or_none():
+                    await db.rollback()
+                    raise LawyerProfilePhoneNumberConflict()
             user_updates["phone_number"] = normalized
+            setattr(profile, field, normalized)
+            continue
+
+        setattr(profile, field, normalized)
 
     if "address" in update_data:
         value = update_data["address"]
