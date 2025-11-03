@@ -97,6 +97,14 @@ class LawyerProfileInvalidField(HTTPException):
         )
 
 
+class LawyerProfilePhoneNumberConflict(HTTPException):
+    def __init__(self) -> None:
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Phone number is already in use by another account.",
+        )
+
+
 class InvalidRevocationReason(HTTPException):
     def __init__(self) -> None:
         super().__init__(
