@@ -157,7 +157,7 @@ export default function DocumentsScreen() {
         <RadioGroup
           options={[
             { label: t('common.all'), value: 'all' },
-            { label: t('home.newest'), value: 'newest' },
+            { label: t('documents.newest'), value: 'newest' },
             { label: t('documents.oldest'), value: 'oldest' },
           ]}
           selected={selectedFilter}

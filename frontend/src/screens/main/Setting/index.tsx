@@ -130,7 +130,7 @@ export default function SettingScreen() {
           {
             Father: TouchableOpacity,
             iconName: 'calendar-outline',
-            title: 'Manage Schedule',
+            title: t('schedule.manageSchedule'),
             onPress: () => {
               navigation.navigate(MainStackNames.ScheduleManagement);
             },

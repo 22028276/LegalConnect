@@ -71,18 +71,7 @@ export default function CaseCard({
   };
 
   const getStatusLabel = (caseStatus: string) => {
-    switch (caseStatus) {
-      case 'PENDING':
-        return t('cases.pending');
-      case 'IN_PROGRESS':
-        return t('cases.inProgress');
-      case 'COMPLETED':
-        return t('cases.completed');
-      case 'CANCELLED':
-        return t('cases.cancelled');
-      default:
-        return caseStatus;
-    }
+    return t(`cases.${caseStatus.toLowerCase()}`);
   };
 
   const statusColors = getStatusColor(state);
